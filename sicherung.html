@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sicherung</title>
+<meta name="description" content="Gesamtsicherung aller Daten der Anwendung in einer Datei, Wiederherstellung und Überblick über den Speicherstand.">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#141C24">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>
+:root{
+  --papier:#EEF1F2; --karte:#FFFFFF; --tinte:#141C24; --grau:#5E6B76; --linie:#D3DADE;
+  --blau:#28536B; --blau-hell:#E4EBEF;
+  --bernstein:#B26A0F; --bernstein-hell:#FBEEDA;
+  --rot:#9C3B31; --rot-hell:#F7E3E0;
+  --gruen:#2C6E60; --gruen-hell:#E0EDE9;
+  --mono:ui-monospace,"SF Mono","DejaVu Sans Mono",Menlo,Consolas,monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--papier);color:var(--tinte);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px;margin:0 auto;padding:26px 20px 90px}
+
+header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;border-bottom:2px solid var(--tinte);padding-bottom:13px}
+header.top h1{font-size:20px;font-weight:650;margin:0;letter-spacing:-.01em}
+header.top .sub{font-size:12.5px;color:var(--grau);margin-top:3px}
+header.top .sub a{color:var(--blau)}
+
+button{font:inherit;font-size:13px;border:1px solid var(--linie);background:var(--karte);color:var(--tinte);border-radius:3px;padding:7px 12px;cursor:pointer}
+button:hover{border-color:var(--blau);color:var(--blau)}
+button:focus-visible{outline:2px solid var(--blau);outline-offset:2px}
+button.primaer{background:var(--blau);border-color:var(--blau);color:#fff}
+button.primaer:hover{background:#1D4054;color:#fff}
+button.gefahr{border-color:var(--rot);color:var(--rot)}
+button.gefahr:hover{background:var(--rot);color:#fff;border-color:var(--rot)}
+button[disabled]{opacity:.5;cursor:default}
+
+.stand{background:var(--karte);border:1px solid var(--linie);border-radius:4px;padding:16px 18px;margin:20px 0 16px;border-left:4px solid var(--gruen)}
+.stand.warnen{border-left-color:var(--bernstein)}
+.stand.dringend{border-left-color:var(--rot)}
+.stand .gross{font-size:17px;font-weight:600;margin-bottom:3px}
+.stand .klein{font-size:13px;color:var(--grau)}
+
+.knopfreihe{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0 24px}
+
+table{width:100%;border-collapse:collapse;background:var(--karte);border:1px solid var(--linie);border-radius:4px;margin-bottom:12px}
+th,td{text-align:left;padding:8px 11px;font-size:13.5px;border-bottom:1px solid var(--linie)}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--grau);font-weight:600}
+tbody tr:last-child td{border-bottom:none}
+td.num,th.num{font-family:var(--mono);text-align:right}
+td.leerspeicher{color:var(--grau)}
+
+h2.trenner{font-size:13px;text-transform:uppercase;letter-spacing:.07em;color:var(--grau);margin:26px 0 10px;font-weight:600}
+.hinweis{font-size:12.5px;background:var(--bernstein-hell);border-left:3px solid var(--bernstein);color:var(--bernstein);padding:9px 12px;margin-bottom:16px;border-radius:0 3px 3px 0}
+.hinweis.ruhig{background:var(--blau-hell);border-left-color:var(--blau);color:var(--grau)}
+.meldung{font-size:13.5px;padding:9px 12px;border-radius:3px;margin-bottom:14px}
+.meldung.ok{background:var(--gruen-hell);color:var(--gruen)}
+.meldung.fehler{background:var(--rot-hell);color:var(--rot)}
+footer.quelle{margin-top:28px;padding-top:14px;border-top:1px solid var(--linie);font-size:12px;color:var(--grau)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div>
+    <h1>Sicherung</h1>
+    <div class="sub"><a href="./">Behandlungsplätze</a> · <a href="bericht.html">Berichtsbaukasten</a> · <a href="logbuch.html">Logbuch</a> · <a href="module.html">Modul-Landkarten</a> · <a href="abschluss.html">Abschluss</a> · <a href="monitoring.html">Monitoring</a></div>
+  </div>
+</header>
+
+<div class="stand" id="stand"></div>
+
+<div class="knopfreihe">
+  <button class="primaer" id="btn-sichern">Gesamtsicherung erstellen</button>
+  <button id="btn-erneut" hidden>In dieselbe Datei speichern</button>
+  <button id="btn-wieder">Sicherung einspielen</button>
+  <input type="file" id="datei" accept="application/json" hidden>
+</div>
+
+<div id="meldung"></div>
+
+<h2 class="trenner">Was gesichert wird</h2>
+<div id="tabelle"></div>
+
+<p class="hinweis" id="hinweis-speicher">
+  Alle Daten liegen ausschließlich im Speicher dieses Browsers. Sie gehen verloren, wenn Browserdaten gelöscht werden, und stehen auf anderen Geräten nicht zur Verfügung. Auf iOS räumt das System die Daten nicht installierter Web-Apps nach längerer Nichtnutzung auf. Regelmäßig sichern und die Datei außerhalb des Browsers ablegen.
+</p>
+
+<h2 class="trenner">Wiederherstellung</h2>
+<p style="font-size:13.5px;color:var(--grau);max-width:62ch">
+  Beim Einspielen wird der gesamte bisherige Inhalt dieses Browsers ersetzt, nicht ergänzt. Vor dem Einspielen einer älteren Datei zuerst den aktuellen Stand sichern. Die Sicherungsdatei ist unverschlüsselter Text — sie gehört auf ein Medium, das den Anforderungen deiner Ambulanz an die Aufbewahrung genügt.
+</p>
+
+<footer class="quelle">
+  Die Sicherung umfasst die Speicher aller sechs Seiten sowie das gemeinsame Fallverzeichnis. Sie enthält keine Klarnamen, sofern nur Fallcodes eingetragen wurden.
+</footer>
+
+</div>
+
+<script>
+"use strict";
+
+var SPEICHER = [
+  {schluessel:"pia-behandlungsplaetze-v2", name:"Behandlungsplätze", seite:"index.html",
+   zaehler:function(d){ return [(d.faelle||[]).length+" Fälle", (d.sv||[]).length+" Supervisionstermine"]; }},
+  {schluessel:"pia-berichtsbaukasten-v1", name:"Berichtsbaukasten", seite:"bericht.html",
+   zaehler:function(d){ return [(d.berichte||[]).length+" Berichte"]; }},
+  {schluessel:"pia-falldarstellungen-v1", name:"Falldarstellungs-Logbuch", seite:"logbuch.html",
+   zaehler:function(d){
+     var e=0,m=0;
+     (d.faelle||[]).forEach(function(f){ e+=(f.eintraege||[]).length; m+=(f.messungen||[]).length; });
+     return [(d.faelle||[]).length+" Fälle", e+" Verlaufseinträge", m+" Messwerte"];
+   }},
+  {schluessel:"pia-modullandkarten-v1", name:"Modul-Landkarten", seite:"module.html",
+   zaehler:function(d){
+     return [Object.keys(d.haken||{}).length+" Haken", Object.keys(d.notizen||{}).length+" Notizen"];
+   }},
+  {schluessel:"pia-abschlussmaterialien-v1", name:"Abschlussmaterialien", seite:"abschluss.html",
+   zaehler:function(d){ return [Object.keys(d.felder||{}).length+" ausgefüllte Felder"]; }},
+  {schluessel:"pia-verlaufsmonitoring-v1", name:"Verlaufsmonitoring", seite:"monitoring.html",
+   zaehler:function(d){
+     return [(d.instrumente||[]).length+" Instrumente", (d.plan||[]).length+" Planeinträge", (d.werte||[]).length+" Werte"];
+   }},
+  {schluessel:"pia-faelle-v1", name:"Fallverzeichnis", seite:"",
+   zaehler:function(d){ return [(d.faelle||[]).length+" Fallcodes"]; }}
+];
+var SICHERUNGSSTAND = "pia-sicherung-v1";
+
+function el(s){ return document.querySelector(s); }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
+function heuteIso(){ return new Date().toISOString().slice(0,10); }
+function datumDe(iso){ if(!iso) return "—"; var t=String(iso).slice(0,10).split("-"); return t.length===3? t[2]+"."+t[1]+"."+t[0] : iso; }
+function kb(n){ return n<1024 ? n+" B" : (n/1024).toFixed(1).replace(".",",")+" kB"; }
+
+function rohLesen(k){ try{ return window.localStorage.getItem(k); }catch(e){ return null; } }
+
+function standLesen(){
+  try{ var d=JSON.parse(rohLesen(SICHERUNGSSTAND)||"null"); return d||{}; }catch(e){ return {}; }
+}
+function standSchreiben(){
+  try{ window.localStorage.setItem(SICHERUNGSSTAND, JSON.stringify({letzte:new Date().toISOString()})); }catch(e){}
+}
+function tageSeit(iso){
+  if(!iso) return null;
+  var t=(Date.now()-new Date(iso).getTime())/86400000;
+  return Math.floor(t);
+}
+
+function meldung(text, art){
+  el("#meldung").innerHTML = text ? '<div class="meldung '+(art||"ok")+'">'+esc(text)+'</div>' : "";
+}
+
+/* ---------- Übersicht ---------- */
+function zeichneStand(){
+  var letzte=standLesen().letzte, tage=tageSeit(letzte);
+  var kasten=el("#stand");
+  var klasse="", gross="", klein="";
+  if(!letzte){
+    klasse="dringend";
+    gross="Noch nie gesichert";
+    klein="Erstelle jetzt eine erste Gesamtsicherung und lege sie außerhalb des Browsers ab.";
+  } else if(tage>=7){
+    klasse="dringend";
+    gross="Letzte Sicherung vor "+tage+" Tagen";
+    klein="Am "+datumDe(letzte)+". Höchste Zeit für eine neue.";
+  } else if(tage>=3){
+    klasse="warnen";
+    gross="Letzte Sicherung vor "+tage+" Tagen";
+    klein="Am "+datumDe(letzte)+".";
+  } else {
+    gross = tage===0 ? "Heute gesichert" : "Letzte Sicherung vor "+tage+(tage===1?" Tag":" Tagen");
+    klein="Am "+datumDe(letzte)+".";
+  }
+  kasten.className="stand "+klasse;
+  kasten.innerHTML='<div class="gross">'+esc(gross)+'</div><div class="klein">'+esc(klein)+'</div>';
+}
+
+function zeichneTabelle(){
+  var gesamt=0;
+  var zeilen=SPEICHER.map(function(sp){
+    var roh=rohLesen(sp.schluessel);
+    if(!roh){
+      return '<tr><td>'+esc(sp.name)+'</td><td class="leerspeicher">noch keine Daten</td><td class="num">—</td></tr>';
+    }
+    gesamt+=roh.length;
+    var info="";
+    try{ info=sp.zaehler(JSON.parse(roh)).join(" · "); }catch(e){ info="Inhalt nicht lesbar"; }
+    return '<tr><td>'+esc(sp.name)+'</td><td>'+esc(info)+'</td><td class="num">'+kb(roh.length)+'</td></tr>';
+  }).join("");
+  el("#tabelle").innerHTML='<table><thead><tr><th>Bereich</th><th>Inhalt</th><th class="num">Größe</th></tr></thead><tbody>'
+    + zeilen
+    + '<tr><td><b>Gesamt</b></td><td></td><td class="num"><b>'+kb(gesamt)+'</b></td></tr>'
+    + '</tbody></table>';
+}
+
+/* ---------- Sichern ---------- */
+function paket(){
+  var inhalt={};
+  SPEICHER.forEach(function(sp){
+    var roh=rohLesen(sp.schluessel);
+    if(roh!=null) inhalt[sp.schluessel]=roh;
+  });
+  return JSON.stringify({
+    typ:"pia-gesamtsicherung",
+    version:1,
+    erstellt:new Date().toISOString(),
+    speicher:inhalt
+  }, null, 2);
+}
+
+var dateiGriff = null;
+
+async function sichern(erneut){
+  var text=paket();
+  var name="pia-gesamtsicherung-"+heuteIso()+".json";
+  try{
+    if(erneut && dateiGriff){
+      var w1=await dateiGriff.createWritable();
+      await w1.write(text); await w1.close();
+      standSchreiben(); zeichneStand();
+      meldung("Gespeichert in "+dateiGriff.name+".","ok");
+      return;
+    }
+    if(window.showSaveFilePicker){
+      dateiGriff=await window.showSaveFilePicker({
+        suggestedName:name,
+        types:[{description:"Sicherung", accept:{"application/json":[".json"]}}]
+      });
+      var w2=await dateiGriff.createWritable();
+      await w2.write(text); await w2.close();
+      el("#btn-erneut").hidden=false;
+      standSchreiben(); zeichneStand();
+      meldung("Gespeichert in "+dateiGriff.name+". Ab jetzt geht es mit einem Klick in dieselbe Datei.","ok");
+      return;
+    }
+  }catch(e){
+    if(e && e.name==="AbortError"){ meldung("Abgebrochen. Nichts gespeichert.","fehler"); return; }
+  }
+  var blob=new Blob([text],{type:"application/json"});
+  var a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=name;
+  a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); },1000);
+  standSchreiben(); zeichneStand();
+  meldung("Sicherung heruntergeladen. Datei aus dem Download-Ordner an einen sicheren Ort verschieben.","ok");
+}
+
+el("#btn-sichern").addEventListener("click", function(){ sichern(false); });
+el("#btn-erneut").addEventListener("click", function(){ sichern(true); });
+
+/* ---------- Wiederherstellen ---------- */
+el("#btn-wieder").addEventListener("click", function(){ el("#datei").click(); });
+el("#datei").addEventListener("change", function(ev){
+  var f=ev.target.files[0]; if(!f) return;
+  var leser=new FileReader();
+  leser.onload=function(){
+    var paketdaten;
+    try{
+      paketdaten=JSON.parse(leser.result);
+      if(!paketdaten || paketdaten.typ!=="pia-gesamtsicherung" || !paketdaten.speicher) throw new Error("Format");
+    }catch(e){
+      meldung("Das ist keine Gesamtsicherung dieser Anwendung. Einzelsicherungen der jeweiligen Seite dort einspielen.","fehler");
+      ev.target.value=""; return;
+    }
+    var enthalten=Object.keys(paketdaten.speicher).length;
+    if(!window.confirm(
+      "Sicherung vom "+datumDe(paketdaten.erstellt)+" einspielen?\n\n"
+      + enthalten+" Bereiche werden ersetzt. Der aktuelle Inhalt dieses Browsers geht dabei verloren."
+    )){ ev.target.value=""; return; }
+    var fehler=0;
+    Object.keys(paketdaten.speicher).forEach(function(k){
+      try{ window.localStorage.setItem(k, paketdaten.speicher[k]); }catch(e){ fehler++; }
+    });
+    zeichneTabelle(); zeichneStand();
+    meldung(fehler
+      ? "Eingespielt, aber "+fehler+" Bereiche konnten nicht geschrieben werden."
+      : "Sicherung vom "+datumDe(paketdaten.erstellt)+" eingespielt. Die anderen Seiten neu laden.",
+      fehler ? "fehler" : "ok");
+    ev.target.value="";
+  };
+  leser.readAsText(f);
+});
+
+/* ---------- Offlinebetrieb ---------- */
+(function(){
+  if(!("serviceWorker" in navigator)) return;
+  if(location.protocol!=="http:" && location.protocol!=="https:") return;
+  window.addEventListener("load", function(){ navigator.serviceWorker.register("sw.js").catch(function(){}); });
+})();
+
+zeichneStand(); zeichneTabelle();
+</script>
+</body>
+</html>

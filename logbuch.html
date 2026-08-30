@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Falldarstellungs-Logbuch</title>
+<meta name="description" content="Laufende Dokumentation der Kandidatenfälle für die schriftlichen Falldarstellungen: Ausgangslage, Messwerte, Verlauf, Wendepunkte, Abschluss.">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#141C24">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>
+:root{
+  --papier:#EEF1F2; --karte:#FFFFFF; --tinte:#141C24; --grau:#5E6B76; --linie:#D3DADE;
+  --blau:#28536B; --blau-hell:#E4EBEF;
+  --bernstein:#B26A0F; --bernstein-hell:#FBEEDA;
+  --rot:#9C3B31; --rot-hell:#F7E3E0;
+  --gruen:#2C6E60; --gruen-hell:#E0EDE9;
+  --mono:ui-monospace,"SF Mono","DejaVu Sans Mono",Menlo,Consolas,monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--papier);color:var(--tinte);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:940px;margin:0 auto;padding:26px 20px 90px}
+
+header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;border-bottom:2px solid var(--tinte);padding-bottom:13px}
+header.top h1{font-size:20px;font-weight:650;margin:0;letter-spacing:-.01em}
+header.top .sub{font-size:12.5px;color:var(--grau);margin-top:3px}
+header.top .sub a{color:var(--blau)}
+.werkzeuge{display:flex;gap:8px;flex-wrap:wrap}
+
+button{font:inherit;font-size:13px;border:1px solid var(--linie);background:var(--karte);color:var(--tinte);border-radius:3px;padding:6px 11px;cursor:pointer}
+button:hover{border-color:var(--blau);color:var(--blau)}
+button:focus-visible{outline:2px solid var(--blau);outline-offset:2px}
+button.primaer{background:var(--blau);border-color:var(--blau);color:#fff}
+button.primaer:hover{background:#1D4054;color:#fff}
+button.still{border-color:transparent;background:transparent;color:var(--grau);padding:4px 6px}
+button.still:hover{color:var(--rot)}
+
+.steuerleiste{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;background:var(--karte);border:1px solid var(--linie);border-radius:4px;padding:14px 16px;margin:18px 0}
+label.feld{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--grau);text-transform:uppercase;letter-spacing:.05em}
+label.feld input,label.feld select{font:inherit;font-size:14px;color:var(--tinte);text-transform:none;letter-spacing:0;border:1px solid var(--linie);border-radius:3px;padding:6px 8px;background:#fff}
+label.feld input:focus,label.feld select:focus{outline:2px solid var(--blau);border-color:var(--blau)}
+.w-klein input,.w-klein select{width:112px}
+.w-mittel input,.w-mittel select{width:190px}
+
+.hinweis{font-size:12.5px;color:var(--grau);background:var(--blau-hell);border-left:3px solid var(--blau);padding:8px 12px;margin-bottom:16px;border-radius:0 3px 3px 0}
+.hinweis.warn{background:var(--bernstein-hell);border-left-color:var(--bernstein);color:var(--bernstein)}
+
+/* Übersicht der Kandidatenfälle */
+.uebersicht{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.kachel{background:var(--karte);border:1px solid var(--linie);border-radius:4px;padding:10px 13px;min-width:132px}
+.kachel b{display:block;font-family:var(--mono);font-size:17px;font-weight:600}
+.kachel span{font-size:11.5px;color:var(--grau);text-transform:uppercase;letter-spacing:.05em}
+.kachel.voll b{color:var(--gruen)}
+.spektrum{font-size:12.5px;color:var(--grau);margin-bottom:18px}
+
+.abschnitt{background:var(--karte);border:1px solid var(--linie);border-radius:4px;padding:16px;margin-bottom:14px}
+.abschnitt h2{font-size:15px;margin:0 0 4px;font-weight:650}
+.abschnitt p.erlaeuterung{font-size:12.5px;color:var(--grau);margin:0 0 10px}
+textarea{width:100%;font:inherit;font-size:14.5px;line-height:1.55;border:1px solid var(--linie);border-radius:3px;padding:10px 11px;background:#fff;color:var(--tinte);resize:vertical;min-height:96px}
+textarea:focus{outline:2px solid var(--blau);border-color:var(--blau)}
+
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--linie);vertical-align:top}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--grau);font-weight:600}
+tbody tr:last-child td{border-bottom:none}
+td.num,th.num{font-family:var(--mono);text-align:right}
+tr.wende td{background:var(--bernstein-hell)}
+
+.erfassung{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-top:12px;padding-top:12px;border-top:1px solid var(--linie)}
+.erfassung input,.erfassung select,.erfassung textarea{font:inherit;font-size:13.5px;border:1px solid var(--linie);border-radius:3px;padding:6px 8px;background:#fff}
+.erfassung textarea{min-height:38px;flex:1 1 260px}
+.erfassung label{display:flex;flex-direction:column;gap:3px;font-size:11.5px;color:var(--grau);text-transform:uppercase;letter-spacing:.05em}
+.erfassung label.schalter{flex-direction:row;align-items:center;gap:6px;text-transform:none;letter-spacing:0;font-size:13px;color:var(--tinte);padding-bottom:7px}
+
+/* Verlaufsgrafik */
+.grafik{margin-top:14px}
+.grafik svg{width:100%;height:150px;display:block;background:#FAFBFB;border:1px solid var(--linie);border-radius:3px}
+.legende{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--grau);margin-top:6px}
+.legende i{display:inline-block;width:10px;height:3px;vertical-align:middle;margin-right:5px}
+
+.eintrag-text{white-space:pre-wrap}
+.marke{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;padding:1px 6px;border-radius:2px;background:var(--bernstein-hell);color:var(--bernstein);white-space:nowrap}
+.leer{background:var(--karte);border:1px dashed var(--linie);border-radius:4px;padding:22px;text-align:center;color:var(--grau);font-size:13.5px}
+h2.trenner{font-size:13px;text-transform:uppercase;letter-spacing:.07em;color:var(--grau);margin:26px 0 10px;font-weight:600}
+footer.quelle{margin-top:30px;padding-top:14px;border-top:1px solid var(--linie);font-size:12px;color:var(--grau)}
+footer.quelle a{color:var(--blau)}
+
+@media print{
+  body{background:#fff}
+  .werkzeuge,.steuerleiste,.erfassung,.hinweis,.uebersicht{display:none}
+  .abschnitt{border:none;padding:0;margin-bottom:16px;break-inside:avoid}
+  textarea{border:none;padding:0;resize:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div>
+    <h1>Falldarstellungs-Logbuch</h1>
+    <div class="sub">Kandidatenfälle für die schriftlichen Falldarstellungen · <a href="./">Behandlungsplätze</a> · <a href="bericht.html">Berichtsbaukasten</a> · <a href="module.html">Modul-Landkarten</a> · <a href="abschluss.html">Abschluss</a> · <a href="monitoring.html">Monitoring</a> · <a href="sicherung.html">Sicherung</a></div>
+  </div>
+  <div class="werkzeuge">
+    <button class="primaer" id="btn-word">Falldarstellung als Word</button>
+    <button id="btn-text">als Markdown</button>
+    <button id="btn-export">Daten sichern</button>
+    <button id="btn-import">Sicherung laden</button>
+    <button onclick="window.print()">Drucken</button>
+    <input type="file" id="datei" accept="application/json" hidden>
+  </div>
+</header>
+
+<p class="hinweis warn">
+  Nur Fallcodes eintragen, keine Klarnamen, Geburtsdaten oder Adressen. Die Falldarstellungen werden anonymisiert eingereicht — was hier nicht steht, muss später nicht entfernt werden.
+</p>
+
+<div class="uebersicht" id="uebersicht"></div>
+<div class="spektrum" id="spektrum"></div>
+
+<div class="steuerleiste">
+  <label class="feld w-mittel">Fall<select id="auswahl"></select></label>
+  <label class="feld w-klein">Fallcode<input id="code" data-fallcode maxlength="12" placeholder="A-01"></label>
+  <label class="feld w-mittel">Bereich<input id="bereich" maxlength="40" placeholder="Panikstörung"></label>
+  <label class="feld w-klein">Beginn<input id="beginn" type="date"></label>
+  <label class="feld w-klein">Ende<input id="ende" type="date"></label>
+  <label class="feld w-klein">Status
+    <select id="status"><option value="laufend">laufend</option><option value="abgeschlossen">abgeschlossen</option><option value="abgebrochen">abgebrochen</option></select>
+  </label>
+  <button class="primaer" id="btn-neu">Neuer Fall</button>
+  <button class="still" id="btn-weg">löschen</button>
+</div>
+
+<div id="inhalt"></div>
+
+<footer class="quelle">
+  Nach § 4 PsychTh-APrV sind im Rahmen der praktischen Ausbildung sechs anonymisierte schriftliche Falldarstellungen zu erstellen, die von der Ausbildungsstätte beurteilt werden; sie umfassen Diagnostik, Indikationsstellung und eine Evaluation der Therapieergebnisse. Maßgeblich sind der Verordnungstext (<a href="https://freirecht.de/g/PsychThAPrV:4" target="_blank" rel="noopener">§ 4 PsychTh-APrV</a>) und die Ordnung des eigenen Instituts, das Form und Umfang zusätzlich regeln kann.
+</footer>
+
+</div>
+
+<script src="docxbau.js"></script>
+<script>
+"use strict";
+
+var SCHLUESSEL = "pia-falldarstellungen-v1";
+var ZIEL_FAELLE = 6;
+
+var TEXTFELDER = [
+  {id:"ausgangslage", titel:"Ausgangslage und Aufnahmebefund",
+   hilfe:"Symptomatik bei Aufnahme, psychischer Befund, ICD-Diagnose mit Sicherheit, Vorbehandlungen, somatische Befunde. Zeitnah zur ersten Sitzung ausfüllen — später ist der Eindruck nicht mehr rekonstruierbar."},
+  {id:"modell", titel:"Störungsmodell und Verhaltensanalyse",
+   hilfe:"Prädisponierende, auslösende und aufrechterhaltende Bedingungen, Ressourcen, eine typische Problemsituation. Die Fassung, die tatsächlich mit der Patientin oder dem Patienten erarbeitet wurde."},
+  {id:"ziele", titel:"Therapieziele und Indikationsstellung",
+   hilfe:"Gemeinsam reflektierte Ziele, Begründung von Verfahren, Setting, Frequenz und Sitzungszahl. Spätere Änderungen als Verlaufseintrag festhalten, nicht hier überschreiben."},
+  {id:"abschluss", titel:"Abschluss und Ergebnis",
+   hilfe:"Zielerreichung, Veränderung der Messwerte, Rezidivprophylaxe, Notfallplan, Katamnese, Grund eines Abbruchs."},
+  {id:"reflexion", titel:"Eigene Reflexion",
+   hilfe:"Was schwierig war, wo Supervision die Richtung geändert hat, was du beim nächsten Fall anders machen würdest. Trägt die mündliche Prüfung."}
+];
+
+function id(){ return Math.random().toString(36).slice(2,9); }
+function el(s){ return document.querySelector(s); }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
+function heuteIso(){ return new Date().toISOString().slice(0,10); }
+function datumDe(iso){ if(!iso) return "—"; var t=String(iso).split("-"); return t.length===3? t[2]+"."+t[1]+"."+t[0] : iso; }
+function zahlDe(n){ return String(Math.round(n*100)/100).replace(".",","); }
+
+function neuerFall(){
+  return {ref:id(), code:"", bereich:"", beginn:heuteIso(), ende:"", status:"laufend",
+          felder:{}, messungen:[], eintraege:[]};
+}
+function grundzustand(){ var f=neuerFall(); return {version:1, faelle:[f], aktiv:f.ref}; }
+
+function laden(){
+  try{
+    var roh=window.localStorage.getItem(SCHLUESSEL);
+    var d=roh?JSON.parse(roh):null;
+    if(!d||!Array.isArray(d.faelle)||!d.faelle.length) return grundzustand();
+    return d;
+  }catch(e){ return grundzustand(); }
+}
+function sichern(){ try{ window.localStorage.setItem(SCHLUESSEL, JSON.stringify(daten)); }catch(e){} }
+var daten = laden();
+
+/* ---------- Werte aus dem Verlaufsmonitoring ---------- */
+var MONITORING = "pia-verlaufsmonitoring-v1";
+function monitoringLesen(){
+  try{
+    var r=window.localStorage.getItem(MONITORING);
+    var d=r?JSON.parse(r):null;
+    return (d && Array.isArray(d.werte)) ? d : null;
+  }catch(e){ return null; }
+}
+function monitoringWerte(code){
+  var d=monitoringLesen();
+  if(!d || !code) return [];
+  return d.werte.filter(function(w){ return w.fall===code; }).map(function(w){
+    return {datum:w.datum, instrument:w.instrument, wert:w.wert,
+            zeitpunkt:(w.sitzung!=null ? "Sitzung "+w.sitzung : (w.notiz||"—"))};
+  }).sort(function(a,b){ return String(a.datum).localeCompare(String(b.datum)); });
+}
+function altwerteUebernehmen(f){
+  var d=monitoringLesen();
+  if(!d){ window.alert("Das Verlaufsmonitoring wurde noch nicht geöffnet. Einmal aufrufen, dann erneut versuchen."); return false; }
+  if(!f.code){ window.alert("Der Fall braucht zuerst einen Fallcode."); return false; }
+  (f.messungen||[]).forEach(function(m){
+    var sitzung=null;
+    var treffer=String(m.zeitpunkt||"").match(/\d+/);
+    if(treffer) sitzung=parseInt(treffer[0],10);
+    d.werte.push({ref:id(), fall:f.code, instrument:m.instrument, datum:m.datum,
+                  sitzung:sitzung, wert:m.wert, notiz:sitzung==null?(m.zeitpunkt||""):""});
+  });
+  try{ window.localStorage.setItem(MONITORING, JSON.stringify(d)); }
+  catch(e){ window.alert("Die Werte konnten nicht übertragen werden."); return false; }
+  f.messungen=[];
+  return true;
+}
+
+function aktiv(){
+  for(var i=0;i<daten.faelle.length;i++){ if(daten.faelle[i].ref===daten.aktiv) return daten.faelle[i]; }
+  daten.aktiv=daten.faelle[0].ref; return daten.faelle[0];
+}
+
+/* ---------- Übersicht ---------- */
+function zeichneUebersicht(){
+  var abg=daten.faelle.filter(function(f){ return f.status==="abgeschlossen"; }).length;
+  var mitAbschluss=daten.faelle.filter(function(f){ return (f.felder.abschluss||"").trim(); }).length;
+  var mitMessung=daten.faelle.filter(function(f){ return monitoringWerte(f.code).length>=2; }).length;
+  var kacheln=[
+    {b:daten.faelle.length, s:"Fälle im Logbuch", voll:daten.faelle.length>=ZIEL_FAELLE},
+    {b:abg+" / "+ZIEL_FAELLE, s:"abgeschlossen", voll:abg>=ZIEL_FAELLE},
+    {b:mitAbschluss+" / "+ZIEL_FAELLE, s:"mit Ergebnisteil", voll:mitAbschluss>=ZIEL_FAELLE},
+    {b:mitMessung+" / "+ZIEL_FAELLE, s:"mit Verlaufsmessung", voll:mitMessung>=ZIEL_FAELLE}
+  ];
+  el("#uebersicht").innerHTML=kacheln.map(function(k){
+    return '<div class="kachel'+(k.voll?" voll":"")+'"><b>'+esc(k.b)+'</b><span>'+esc(k.s)+'</span></div>';
+  }).join("");
+  var bereiche={};
+  daten.faelle.forEach(function(f){ if(f.bereich) bereiche[f.bereich.toLowerCase()]=f.bereich; });
+  var namen=Object.keys(bereiche).map(function(k){ return bereiche[k]; });
+  el("#spektrum").textContent = namen.length
+    ? "Störungsspektrum: "+namen.join(", ")
+    : "Störungsspektrum: noch keine Bereiche erfasst.";
+}
+
+/* ---------- Kopfsteuerung ---------- */
+function zeichneKopf(){
+  var f=aktiv();
+  el("#auswahl").innerHTML=daten.faelle.map(function(x){
+    return '<option value="'+x.ref+'"'+(x.ref===f.ref?" selected":"")+'>'+esc((x.code||"ohne Code")+(x.bereich?" · "+x.bereich:""))+'</option>';
+  }).join("");
+  el("#code").value=f.code||"";
+  el("#bereich").value=f.bereich||"";
+  el("#beginn").value=f.beginn||"";
+  el("#ende").value=f.ende||"";
+  el("#status").value=f.status;
+}
+el("#auswahl").addEventListener("change", function(){ daten.aktiv=this.value; sichern(); allesZeichnen(); });
+["code","bereich","beginn","ende","status"].forEach(function(k){
+  el("#"+k).addEventListener("input", function(){
+    var f=aktiv();
+    f[k] = (k==="code"||k==="bereich") ? this.value.trim() : this.value;
+    sichern(); zeichneKopf(); zeichneUebersicht();
+  });
+});
+el("#btn-neu").addEventListener("click", function(){
+  var f=neuerFall(); daten.faelle.push(f); daten.aktiv=f.ref; sichern(); allesZeichnen(); el("#code").focus();
+});
+el("#btn-weg").addEventListener("click", function(){
+  var f=aktiv();
+  if(!window.confirm("Fall "+(f.code||"ohne Code")+" mit allen Einträgen und Messwerten löschen?")) return;
+  daten.faelle=daten.faelle.filter(function(x){ return x.ref!==f.ref; });
+  if(!daten.faelle.length) daten.faelle.push(neuerFall());
+  daten.aktiv=daten.faelle[0].ref; sichern(); allesZeichnen();
+});
+
+/* ---------- Verlaufsgrafik ---------- */
+var FARBEN=["#28536B","#2C6E60","#B26A0F","#9C3B31","#6B5B95"];
+function grafik(messungen){
+  if(messungen.length<2) return "";
+  var nachInstrument={};
+  messungen.forEach(function(m){
+    if(!nachInstrument[m.instrument]) nachInstrument[m.instrument]=[];
+    nachInstrument[m.instrument].push(m);
+  });
+  var namen=Object.keys(nachInstrument);
+  var alle=messungen.map(function(m){ return m.wert; });
+  var max=Math.max.apply(null,alle), min=Math.min.apply(null,alle);
+  if(max===min){ max=max+1; min=min-1; }
+  var b=600, h=150, pad=22;
+  var reihen=namen.map(function(n,i){
+    var punkte=nachInstrument[n].slice().sort(function(a,c){ return String(a.datum).localeCompare(String(c.datum)); });
+    var schritt = punkte.length>1 ? (b-2*pad)/(punkte.length-1) : 0;
+    var koord=punkte.map(function(p,j){
+      var x=pad+j*schritt;
+      var y=h-pad-((p.wert-min)/(max-min))*(h-2*pad);
+      return {x:x,y:y,p:p};
+    });
+    var linie=koord.map(function(k,j){ return (j?"L":"M")+k.x.toFixed(1)+" "+k.y.toFixed(1); }).join(" ");
+    var kreise=koord.map(function(k){
+      return '<circle cx="'+k.x.toFixed(1)+'" cy="'+k.y.toFixed(1)+'" r="3.5" fill="'+FARBEN[i%FARBEN.length]+'"><title>'+esc(k.p.zeitpunkt+": "+k.p.wert)+'</title></circle>';
+    }).join("");
+    return '<path d="'+linie+'" fill="none" stroke="'+FARBEN[i%FARBEN.length]+'" stroke-width="2"/>'+kreise;
+  }).join("");
+
+  var legende=namen.map(function(n,i){
+    return '<span><i style="background:'+FARBEN[i%FARBEN.length]+'"></i>'+esc(n)+'</span>';
+  }).join("");
+
+  return '<div class="grafik"><svg viewBox="0 0 '+b+' '+h+'" preserveAspectRatio="none" role="img" aria-label="Verlauf der Messwerte">'
+    + '<line x1="'+pad+'" y1="'+(h-pad)+'" x2="'+(b-pad)+'" y2="'+(h-pad)+'" stroke="#D3DADE" stroke-width="1"/>'
+    + reihen
+    + '<text x="'+(pad-4)+'" y="'+(pad+4)+'" font-size="11" fill="#5E6B76" text-anchor="end">'+zahlDe(max)+'</text>'
+    + '<text x="'+(pad-4)+'" y="'+(h-pad)+'" font-size="11" fill="#5E6B76" text-anchor="end">'+zahlDe(min)+'</text>'
+    + '</svg><div class="legende">'+legende+'</div></div>';
+}
+
+/* ---------- Inhalt ---------- */
+function zeichneInhalt(){
+  var f=aktiv();
+  var teile=[];
+
+  TEXTFELDER.slice(0,3).forEach(function(t){ teile.push(textabschnitt(f,t)); });
+
+  /* Messwerte — Anzeige aus dem Verlaufsmonitoring */
+  var mess=monitoringWerte(f.code);
+  var alt=(f.messungen||[]).length;
+  teile.push('<section class="abschnitt">'
+    + '<h2>Verlaufsmessung</h2>'
+    + '<p class="erlaeuterung">Die Werte werden im Verlaufsmonitoring erfasst und hier über den Fallcode angezeigt. '
+    +   'Die Falldarstellung verlangt eine Evaluation der Therapieergebnisse — dafür braucht es mindestens einen Wert vor und einen nach der Behandlung.</p>'
+    + (mess.length
+        ? '<table><thead><tr><th>Datum</th><th>Instrument</th><th>Zeitpunkt</th><th class="num">Wert</th></tr></thead><tbody>'
+          + mess.map(function(m){
+              return '<tr><td>'+datumDe(m.datum)+'</td><td>'+esc(m.instrument)+'</td><td>'+esc(m.zeitpunkt)+'</td>'
+                + '<td class="num">'+zahlDe(m.wert)+'</td></tr>';
+            }).join("")
+          + '</tbody></table>'
+        : '<div class="leer">'+(f.code
+            ? 'Für den Fallcode '+esc(f.code)+' sind im Monitoring noch keine Werte erfasst.'
+            : 'Erst einen Fallcode eintragen, dann werden die Werte aus dem Monitoring angezeigt.')+'</div>')
+    + grafik(mess)
+    + '<div class="erfassung">'
+    +   '<a href="monitoring.html" style="font:inherit;font-size:13px;border:1px solid var(--linie);background:var(--karte);'
+    +     'color:var(--tinte);border-radius:3px;padding:6px 11px;text-decoration:none">Werte im Monitoring erfassen</a>'
+    +   (alt ? '<button class="primaer" id="btn-altwerte">'+alt+' Altwerte ins Monitoring übernehmen</button>' : '')
+    + '</div></section>');
+
+  /* Verlauf */
+  var eintr=(f.eintraege||[]).slice().sort(function(a,b){ return String(b.datum).localeCompare(String(a.datum)); });
+  var nurWende = !!daten.nurWende;
+  var sichtbar = nurWende ? eintr.filter(function(e){ return e.wende; }) : eintr;
+  teile.push('<section class="abschnitt">'
+    + '<h2>Verlauf</h2>'
+    + '<p class="erlaeuterung">Ein kurzer Eintrag pro relevanter Sitzung. Wendepunkte markieren: sie tragen später die Ergebnisdarstellung. Supervisionsbezug in eigenen Worten, keine wörtlichen Zitate Dritter.</p>'
+    + '<div style="margin-bottom:10px"><label class="schalter" style="font-size:13px;display:flex;align-items:center;gap:6px">'
+    +   '<input type="checkbox" id="filter-wende"'+(nurWende?" checked":"")+'> nur Wendepunkte anzeigen</label></div>'
+    + (sichtbar.length
+        ? '<table><thead><tr><th>Datum</th><th class="num">Sitzung</th><th>Phase</th><th>Eintrag</th><th></th></tr></thead><tbody>'
+          + sichtbar.map(function(e){
+              return '<tr class="'+(e.wende?"wende":"")+'">'
+                + '<td>'+datumDe(e.datum)+'</td>'
+                + '<td class="num">'+(e.sitzung||"—")+'</td>'
+                + '<td>'+esc(e.phase||"—")+(e.wende?' <span class="marke">Wendepunkt</span>':"")+'</td>'
+                + '<td class="eintrag-text">'+esc(e.text)+'</td>'
+                + '<td style="text-align:right"><button class="still" data-weg-eintrag="'+e.ref+'">löschen</button></td></tr>';
+            }).join("")
+          + '</tbody></table>'
+        : '<div class="leer">'+(nurWende?"Keine Wendepunkte markiert.":"Noch keine Verlaufseinträge.")+'</div>')
+    + '<div class="erfassung">'
+    +   '<label>Datum<input type="date" id="e-datum" value="'+heuteIso()+'"></label>'
+    +   '<label>Sitzung<input type="number" min="1" max="300" id="e-sitzung" style="width:78px"></label>'
+    +   '<label>Phase<select id="e-phase">'
+    +     ["Probatorik","Diagnostik","Modellerarbeitung","Intervention","Krise","Stabilisierung","Rezidivprophylaxe","Abschluss"]
+          .map(function(p){ return '<option>'+p+'</option>'; }).join("")
+    +   '</select></label>'
+    +   '<textarea id="e-text" placeholder="Was geschah, was hat gewirkt, was blieb offen"></textarea>'
+    +   '<label class="schalter"><input type="checkbox" id="e-wende"> Wendepunkt</label>'
+    +   '<button class="primaer" id="btn-eintrag">Eintragen</button>'
+    + '</div></section>');
+
+  TEXTFELDER.slice(3).forEach(function(t){ teile.push(textabschnitt(f,t)); });
+
+  el("#inhalt").innerHTML=teile.join("");
+}
+
+function textabschnitt(f,t){
+  return '<section class="abschnitt">'
+    + '<h2>'+esc(t.titel)+'</h2>'
+    + '<p class="erlaeuterung">'+esc(t.hilfe)+'</p>'
+    + '<textarea data-feld="'+t.id+'" rows="5">'+esc(f.felder[t.id]||"")+'</textarea>'
+    + '</section>';
+}
+
+el("#inhalt").addEventListener("input", function(ev){
+  var t=ev.target;
+  if(t.hasAttribute("data-feld")){
+    aktiv().felder[t.getAttribute("data-feld")]=t.value;
+    sichern(); zeichneUebersicht();
+  }
+});
+
+el("#inhalt").addEventListener("change", function(ev){
+  if(ev.target.id==="filter-wende"){ daten.nurWende=ev.target.checked; sichern(); zeichneInhalt(); }
+});
+
+el("#inhalt").addEventListener("click", function(ev){
+  var b=ev.target.closest("button"); if(!b) return;
+  var f=aktiv();
+  if(b.id==="btn-eintrag"){
+    var text=el("#e-text").value.trim();
+    if(!text){ window.alert("Der Eintrag braucht einen Text."); return; }
+    f.eintraege.push({ref:id(), datum:el("#e-datum").value||heuteIso(),
+                      sitzung:parseInt(el("#e-sitzung").value,10)||null,
+                      phase:el("#e-phase").value, text:text, wende:el("#e-wende").checked});
+  } else if(b.id==="btn-altwerte"){
+    if(!altwerteUebernehmen(f)) return;
+  } else if(b.hasAttribute("data-weg-eintrag")){
+    var r2=b.getAttribute("data-weg-eintrag");
+    f.eintraege=f.eintraege.filter(function(e){ return e.ref!==r2; });
+  } else return;
+  sichern(); zeichneInhalt(); zeichneUebersicht();
+});
+
+/* ---------- Textausgabe ---------- */
+el("#btn-word").addEventListener("click", function(){
+  var f=aktiv();
+  var bloecke=[
+    {art:"titel", text:"Falldarstellung — "+(f.code||"ohne Code")},
+    {art:"untertitel", text:(f.bereich||"ohne Bereich")+" · "+f.status+" · "
+      +datumDe(f.beginn)+" bis "+(f.ende?datumDe(f.ende):"offen")}
+  ];
+  TEXTFELDER.slice(0,3).forEach(function(t){
+    bloecke.push({art:"ueberschrift", text:t.titel});
+    bloecke.push({art:"absatz", text:(f.felder[t.id]||"").trim() || "[offen]"});
+  });
+
+  bloecke.push({art:"ueberschrift", text:"Verlaufsmessung"});
+  var mess=monitoringWerte(f.code);
+  if(mess.length){
+    bloecke.push({art:"tabelle", kopf:["Datum","Instrument","Zeitpunkt","Wert"],
+      zeilen:mess.map(function(m){ return [datumDe(m.datum), m.instrument, m.zeitpunkt, zahlDe(m.wert)]; })});
+  } else bloecke.push({art:"absatz", text:"[keine Messwerte]"});
+
+  bloecke.push({art:"ueberschrift", text:"Verlauf"});
+  var eintr=(f.eintraege||[]).slice().sort(function(a,b){ return String(a.datum).localeCompare(String(b.datum)); });
+  if(eintr.length){
+    eintr.forEach(function(e){
+      bloecke.push({art:"absatz", text:"**"+datumDe(e.datum)+(e.sitzung?" · Sitzung "+e.sitzung:"")
+        +" · "+e.phase+(e.wende?" · Wendepunkt":"")+"**"});
+      bloecke.push({art:"aufzaehlung", text:e.text});
+    });
+  } else bloecke.push({art:"absatz", text:"[keine Einträge]"});
+
+  TEXTFELDER.slice(3).forEach(function(t){
+    bloecke.push({art:"ueberschrift", text:t.titel});
+    bloecke.push({art:"absatz", text:(f.felder[t.id]||"").trim() || "[offen]"});
+  });
+  bloecke.push({art:"fussnote", text:"Arbeitsfassung aus dem Falldarstellungs-Logbuch, erstellt am "
+    +datumDe(heuteIso())+". Form und Umfang der Falldarstellung regelt die Ausbildungsstätte."});
+
+  docxSpeichern(docxErzeugen(bloecke), "falldarstellung-"+(f.code||"ohne-code")+"-"+heuteIso()+".docx");
+});
+
+el("#btn-text").addEventListener("click", function(){
+  var f=aktiv();
+  var z=[];
+  z.push("Falldarstellung — "+(f.code||"ohne Code"));
+  z.push((f.bereich||"ohne Bereich")+" · "+f.status+" · "+datumDe(f.beginn)+" bis "+(f.ende?datumDe(f.ende):"offen"));
+  z.push("");
+  TEXTFELDER.slice(0,3).forEach(function(t){
+    z.push("## "+t.titel); z.push((f.felder[t.id]||"").trim()||"[offen]"); z.push("");
+  });
+  z.push("## Verlaufsmessung");
+  var mess=monitoringWerte(f.code);
+  if(mess.length){
+    mess.forEach(function(m){ z.push("- "+datumDe(m.datum)+" · "+m.instrument+" · "+m.zeitpunkt+": "+zahlDe(m.wert)); });
+  } else z.push("[keine Messwerte]");
+  z.push("");
+  z.push("## Verlauf");
+  var eintr=(f.eintraege||[]).slice().sort(function(a,b){ return String(a.datum).localeCompare(String(b.datum)); });
+  if(eintr.length){
+    eintr.forEach(function(e){
+      z.push("- "+datumDe(e.datum)+(e.sitzung?" · Sitzung "+e.sitzung:"")+" · "+e.phase+(e.wende?" · Wendepunkt":""));
+      z.push("  "+e.text.replace(/\n/g,"\n  "));
+    });
+  } else z.push("[keine Einträge]");
+  z.push("");
+  TEXTFELDER.slice(3).forEach(function(t){
+    z.push("## "+t.titel); z.push((f.felder[t.id]||"").trim()||"[offen]"); z.push("");
+  });
+
+  var blob=new Blob([z.join("\n")],{type:"text/markdown;charset=utf-8"});
+  var a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="falldarstellung-"+(f.code||"ohne-code")+"-"+heuteIso()+".md";
+  a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); },1000);
+});
+
+el("#btn-export").addEventListener("click", function(){
+  var blob=new Blob([JSON.stringify(daten,null,2)],{type:"application/json"});
+  var a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="falldarstellungen-"+heuteIso()+".json";
+  a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); },1000);
+});
+el("#btn-import").addEventListener("click", function(){ el("#datei").click(); });
+el("#datei").addEventListener("change", function(ev){
+  var f=ev.target.files[0]; if(!f) return;
+  var leser=new FileReader();
+  leser.onload=function(){
+    try{
+      var neu=JSON.parse(leser.result);
+      if(!neu||!Array.isArray(neu.faelle)||!neu.faelle.length) throw new Error("Format");
+      daten=neu; sichern(); allesZeichnen();
+    }catch(e){ window.alert("Die Datei lässt sich nicht lesen. Erwartet wird eine Sicherung aus diesem Werkzeug."); }
+    ev.target.value="";
+  };
+  leser.readAsText(f);
+});
+
+/* ---------- Offlinebetrieb ---------- */
+(function(){
+  if(!("serviceWorker" in navigator)) return;
+  if(location.protocol!=="http:" && location.protocol!=="https:") return;
+  window.addEventListener("load", function(){ navigator.serviceWorker.register("sw.js").catch(function(){}); });
+})();
+
+
+/* ---------- Gemeinsames Fallverzeichnis (seitenübergreifend) ---------- */
+var FALLVERZEICHNIS = "pia-faelle-v1";
+function verzeichnisLesen(){
+  try{
+    var r=window.localStorage.getItem(FALLVERZEICHNIS);
+    var d=r?JSON.parse(r):null;
+    return (d && Array.isArray(d.faelle)) ? d.faelle : [];
+  }catch(e){ return []; }
+}
+function verzeichnisFall(code){
+  var l=verzeichnisLesen();
+  for(var i=0;i<l.length;i++){ if(l[i].code===code) return l[i]; }
+  return null;
+}
+function verzeichnisSchreiben(code, zusatz){
+  if(!code) return;
+  try{
+    var liste=verzeichnisLesen(), e=null;
+    for(var i=0;i<liste.length;i++){ if(liste[i].code===code){ e=liste[i]; break; } }
+    if(!e){ e={code:code}; liste.push(e); }
+    if(zusatz) for(var k in zusatz){ if(zusatz[k]!=null && zusatz[k]!=="") e[k]=zusatz[k]; }
+    window.localStorage.setItem(FALLVERZEICHNIS, JSON.stringify({faelle:liste}));
+  }catch(err){}
+}
+function fallDatalist(){
+  var d=document.getElementById("fallcodes");
+  if(!d){ d=document.createElement("datalist"); d.id="fallcodes"; document.body.appendChild(d); }
+  d.innerHTML=verzeichnisLesen().map(function(f){
+    var b=[f.bereich, (f.stand!=null?"Sitzung "+f.stand:null), f.status].filter(Boolean).join(" · ");
+    return '<option value="'+String(f.code).replace(/"/g,"&quot;")+'">'+String(b).replace(/</g,"&lt;")+'</option>';
+  }).join("");
+  var e=document.querySelectorAll("[data-fallcode]");
+  for(var i=0;i<e.length;i++) e[i].setAttribute("list","fallcodes");
+}
+
+/* ---------- Start ---------- */
+function allesZeichnen(){
+  zeichneUebersicht(); zeichneKopf(); zeichneInhalt();
+  daten.faelle.forEach(function(f){ verzeichnisSchreiben(f.code,{bereich:f.bereich,status:f.status}); });
+  fallDatalist();
+}
+allesZeichnen();
+
+/* ---------- Sicherungserinnerung ---------- */
+(function(){
+  var SICHERUNGSSTAND="pia-sicherung-v1";
+  var letzte=null;
+  try{ var d=JSON.parse(window.localStorage.getItem(SICHERUNGSSTAND)||"null"); letzte=d&&d.letzte?d.letzte:null; }catch(e){}
+  var tage = letzte ? Math.floor((Date.now()-new Date(letzte).getTime())/86400000) : null;
+  if(tage!==null && tage<7) return;
+  try{ if(window.sessionStorage.getItem("pia-erinnerung-weg")) return; }catch(e){}
+  var leiste=document.createElement("div");
+  leiste.setAttribute("role","status");
+  leiste.style.cssText="position:sticky;top:0;z-index:40;display:flex;gap:12px;align-items:center;flex-wrap:wrap;"
+    + "background:#B26A0F;color:#fff;font-size:13px;padding:9px 16px;font-family:inherit";
+  var text=document.createElement("span");
+  text.textContent = letzte
+    ? "Letzte Gesamtsicherung vor "+tage+" Tagen. Die Daten liegen nur in diesem Browser."
+    : "Noch keine Gesamtsicherung erstellt. Die Daten liegen nur in diesem Browser.";
+  var link=document.createElement("a");
+  link.href="sicherung.html";
+  link.textContent="Jetzt sichern";
+  link.style.cssText="color:#fff;font-weight:600;text-decoration:underline";
+  var weg=document.createElement("button");
+  weg.type="button";
+  weg.textContent="später";
+  weg.style.cssText="margin-left:auto;background:transparent;border:1px solid rgba(255,255,255,.5);color:#fff;"
+    + "border-radius:3px;padding:4px 9px;font:inherit;font-size:12.5px;cursor:pointer";
+  weg.addEventListener("click", function(){
+    try{ window.sessionStorage.setItem("pia-erinnerung-weg","1"); }catch(e){}
+    leiste.remove();
+  });
+  leiste.appendChild(text); leiste.appendChild(link); leiste.appendChild(weg);
+  document.body.insertBefore(leiste, document.body.firstChild);
+})();
+
+</script>
+</body>
+</html>

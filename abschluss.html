@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Abschlussmaterialien</title>
+<meta name="description" content="Rezidivprophylaxe-Blatt, Krisenkarte, Abschlussgespräch-Checkliste und Katamnese-Anschreiben zum Ausfüllen und Ausdrucken.">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#141C24">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>
+:root{
+  --papier:#EEF1F2; --karte:#FFFFFF; --tinte:#141C24; --grau:#5E6B76; --linie:#D3DADE;
+  --blau:#28536B; --blau-hell:#E4EBEF;
+  --bernstein:#B26A0F; --bernstein-hell:#FBEEDA;
+  --rot:#9C3B31; --rot-hell:#F7E3E0;
+  --gruen:#2C6E60; --gruen-hell:#E0EDE9;
+  --mono:ui-monospace,"SF Mono","DejaVu Sans Mono",Menlo,Consolas,monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--papier);color:var(--tinte);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:960px;margin:0 auto;padding:26px 20px 90px}
+
+header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;border-bottom:2px solid var(--tinte);padding-bottom:13px}
+header.top h1{font-size:20px;font-weight:650;margin:0;letter-spacing:-.01em}
+header.top .sub{font-size:12.5px;color:var(--grau);margin-top:3px}
+header.top .sub a{color:var(--blau)}
+.werkzeuge{display:flex;gap:8px;flex-wrap:wrap}
+
+button{font:inherit;font-size:13px;border:1px solid var(--linie);background:var(--karte);color:var(--tinte);border-radius:3px;padding:6px 11px;cursor:pointer}
+button:hover{border-color:var(--blau);color:var(--blau)}
+button:focus-visible{outline:2px solid var(--blau);outline-offset:2px}
+button.primaer{background:var(--blau);border-color:var(--blau);color:#fff}
+button.primaer:hover{background:#1D4054;color:#fff}
+
+nav.reiter{display:flex;gap:2px;margin:18px 0 18px;border-bottom:1px solid var(--linie);flex-wrap:wrap}
+nav.reiter button{border:none;border-bottom:2px solid transparent;background:none;border-radius:0;padding:9px 13px;font-size:14px;color:var(--grau)}
+nav.reiter button:hover{color:var(--tinte)}
+nav.reiter button[aria-selected="true"]{color:var(--tinte);border-bottom-color:var(--tinte);font-weight:600}
+nav.reiter .kennung{font-family:var(--mono);font-size:10.5px;background:var(--linie);color:var(--tinte);border-radius:2px;padding:0 4px;margin-left:6px}
+nav.reiter button[aria-selected="true"] .kennung{background:var(--tinte);color:#fff}
+
+section[hidden]{display:none}
+.zweispalt{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+@media (max-width:840px){.zweispalt{grid-template-columns:1fr}}
+
+.eingabe{background:var(--karte);border:1px solid var(--linie);border-radius:4px;padding:16px}
+.eingabe h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--grau);margin:0 0 12px;font-weight:600}
+label.feld{display:block;margin-bottom:11px}
+label.feld span{display:block;font-size:12px;color:var(--grau);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+label.feld input,label.feld textarea,label.feld select{width:100%;font:inherit;font-size:14px;border:1px solid var(--linie);border-radius:3px;padding:7px 9px;background:#fff;color:var(--tinte)}
+label.feld textarea{min-height:66px;resize:vertical;line-height:1.5}
+label.feld input:focus,label.feld textarea:focus,label.feld select:focus{outline:2px solid var(--blau);border-color:var(--blau)}
+.zeilenhilfe{font-size:12px;color:var(--grau);margin:-6px 0 12px}
+
+.hinweis{font-size:12.5px;background:var(--bernstein-hell);border-left:3px solid var(--bernstein);color:var(--bernstein);padding:9px 12px;margin-bottom:18px;border-radius:0 3px 3px 0}
+
+/* Vorschau — sieht aus wie das gedruckte Blatt */
+.blatt{background:#fff;border:1px solid var(--linie);border-radius:4px;padding:26px 28px;font-size:14.5px;line-height:1.55}
+.blatt h3{font-size:17px;margin:0 0 3px;font-weight:650}
+.blatt .fuss{margin-top:20px;padding-top:10px;border-top:1px solid var(--linie);font-size:11px;color:var(--grau)}
+.blatt h4{font-size:14px;margin:17px 0 5px;font-weight:650}
+.blatt p.anweisung{font-size:13px;color:var(--grau);margin:0 0 6px}
+.blatt .antwort{white-space:pre-wrap;min-height:22px;border-bottom:1px solid var(--linie);padding-bottom:3px}
+.blatt ol,.blatt ul{margin:5px 0 0;padding-left:20px}
+.blatt li{margin-bottom:4px}
+.blatt .leerzeile{border-bottom:1px solid var(--linie);height:22px;margin-bottom:7px}
+
+/* Krisenkarte */
+.karte-vor,.karte-rueck{
+  width:85.6mm;min-height:54mm;border:1px solid var(--tinte);border-radius:3mm;
+  padding:5mm 6mm;font-size:9.5pt;line-height:1.35;background:#fff;margin-bottom:6mm;
+}
+.karte-vor h3,.karte-rueck h3{font-size:10.5pt;margin:0 0 2mm;font-weight:700}
+.karte-vor ol{margin:0;padding-left:4.5mm}
+.karte-vor li{margin-bottom:1mm}
+.karte-rueck .zeile{display:flex;justify-content:space-between;gap:3mm;border-bottom:.2mm solid #C8CFD3;padding:.7mm 0}
+.karte-rueck .zeile b{font-weight:600}
+.karten-halter{display:flex;gap:8mm;flex-wrap:wrap}
+
+/* Checkliste */
+ul.pruef{list-style:none;margin:0;padding:0}
+ul.pruef li{display:flex;gap:9px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--linie);font-size:14px}
+ul.pruef li:last-child{border-bottom:none}
+ul.pruef input{margin-top:3px}
+ul.pruef .kat{font-family:var(--mono);font-size:10.5px;color:var(--grau);text-transform:uppercase;letter-spacing:.05em;margin-top:16px;display:block;border:none}
+.blatt ul.kasten{list-style:none;padding-left:0}
+.blatt ul.kasten li:before{content:"☐  ";font-size:15px}
+
+@media print{
+  @page{margin:14mm}
+  body{background:#fff}
+  .werkzeuge,nav.reiter,.eingabe,.hinweis,header.top .sub,.zeilenhilfe{display:none}
+  header.top{display:none}
+  .wrap{padding:0;max-width:none}
+  .zweispalt{display:block}
+  section[hidden]{display:none !important}
+  .blatt{border:none;padding:0}
+  .karte-vor,.karte-rueck{break-inside:avoid}
+  .karten-halter{gap:6mm}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div>
+    <h1>Abschlussmaterialien</h1>
+    <div class="sub"><a href="./">Behandlungsplätze</a> · <a href="bericht.html">Berichtsbaukasten</a> · <a href="logbuch.html">Logbuch</a> · <a href="module.html">Modul-Landkarten</a> · <a href="monitoring.html">Monitoring</a> · <a href="sicherung.html">Sicherung</a></div>
+  </div>
+  <div class="werkzeuge">
+    <button class="primaer" onclick="window.print()">Aktuelles Blatt drucken</button>
+    <button id="btn-export">Daten sichern</button>
+    <button id="btn-import">Sicherung laden</button>
+    <input type="file" id="datei" accept="application/json" hidden>
+  </div>
+</header>
+
+<nav class="reiter" role="tablist">
+  <button role="tab" id="tab-rp" aria-selected="true" aria-controls="ansicht-rp">Rezidivprophylaxe<span class="kennung">P</span></button>
+  <button role="tab" id="tab-kk" aria-selected="false" aria-controls="ansicht-kk">Krisenkarte<span class="kennung">P</span></button>
+  <button role="tab" id="tab-cl" aria-selected="false" aria-controls="ansicht-cl">Abschlussgespräch<span class="kennung">T</span></button>
+  <button role="tab" id="tab-ka" aria-selected="false" aria-controls="ansicht-ka">Katamnese<span class="kennung">T</span></button>
+</nav>
+
+<p class="hinweis">
+  Die Patientenblätter (P) werden gemeinsam in der Sitzung ausgefüllt, nicht vorbereitet übergeben. Auf den Blättern stehen keine Klarnamen — der Fallcode dient nur der Zuordnung in diesem Werkzeug und wird nicht mitgedruckt.
+</p>
+
+<!-- ===== Rezidivprophylaxe ===== -->
+<section id="ansicht-rp" role="tabpanel" aria-labelledby="tab-rp">
+  <div class="zweispalt">
+    <div class="eingabe">
+      <h2>Angaben</h2>
+      <label class="feld"><span>Fallcode</span><input data-f="code" data-fallcode maxlength="12" placeholder="A-01"></label>
+      <label class="feld"><span>Was geholfen hat</span><textarea data-f="rp_geholfen" placeholder="Eine Zeile pro Punkt"></textarea></label>
+      <p class="zeilenhilfe">Wörtlich aufschreiben, was die Person sagt. Nicht in Fachsprache übersetzen.</p>
+      <label class="feld"><span>Frühwarnzeichen</span><textarea data-f="rp_warn" placeholder="Eine Zeile pro Zeichen"></textarea></label>
+      <p class="zeilenhilfe">Konkrete, beobachtbare Zeichen. „Ich sage Verabredungen ab“ statt „Rückzug“.</p>
+      <label class="feld"><span>Erste Schritte</span><textarea data-f="rp_schritte" placeholder="Eine Zeile pro Schritt"></textarea></label>
+      <label class="feld"><span>Was weiter geübt wird</span><textarea data-f="rp_ueben" placeholder="Eine Zeile pro Übung"></textarea></label>
+      <label class="feld"><span>Unterstützung</span><textarea data-f="rp_hilfe" placeholder="Eine Zeile pro Person oder Stelle"></textarea></label>
+      <label class="feld"><span>Datum</span><input type="date" data-f="rp_datum"></label>
+    </div>
+    <div class="blatt" id="blatt-rp"></div>
+  </div>
+</section>
+
+<!-- ===== Krisenkarte ===== -->
+<section id="ansicht-kk" role="tabpanel" aria-labelledby="tab-kk" hidden>
+  <div class="zweispalt">
+    <div class="eingabe">
+      <h2>Angaben</h2>
+      <label class="feld"><span>Was ich zuerst tue</span><textarea data-f="kk_schritte" placeholder="Drei kurze Zeilen"></textarea></label>
+      <p class="zeilenhilfe">Höchstens drei Schritte, jeder in wenigen Worten. Lange Listen werden im Ernstfall nicht gelesen.</p>
+      <label class="feld"><span>Satz, der hilft</span><input data-f="kk_satz" maxlength="90" placeholder="Ein Satz in eigenen Worten"></label>
+      <label class="feld"><span>Person, die ich anrufe</span><input data-f="kk_person" maxlength="60" placeholder="Rolle und Nummer"></label>
+      <label class="feld"><span>Praxis oder Ambulanz</span><input data-f="kk_praxis" maxlength="60"></label>
+      <label class="feld"><span>Hausärztin oder Hausarzt</span><input data-f="kk_hausarzt" maxlength="60"></label>
+      <label class="feld"><span>Weitere Stelle</span><input data-f="kk_weitere" maxlength="60" placeholder="z. B. Krisendienst vor Ort"></label>
+    </div>
+    <div>
+      <div class="karten-halter">
+        <div class="karte-vor" id="karte-vor"></div>
+        <div class="karte-rueck" id="karte-rueck"></div>
+      </div>
+      <p style="font-size:12px;color:var(--grau)">Vorder- und Rückseite im Format 85,6 × 54 mm. Ausdrucken, ausschneiden, rückseitig kleben. Die bundesweiten Nummern sind fest eingedruckt.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Abschlussgespräch ===== -->
+<section id="ansicht-cl" role="tabpanel" aria-labelledby="tab-cl" hidden>
+  <div class="zweispalt">
+    <div class="eingabe">
+      <h2>Erledigt</h2>
+      <ul class="pruef" id="checkliste"></ul>
+    </div>
+    <div class="blatt" id="blatt-cl"></div>
+  </div>
+</section>
+
+<!-- ===== Katamnese ===== -->
+<section id="ansicht-ka" role="tabpanel" aria-labelledby="tab-ka" hidden>
+  <div class="zweispalt">
+    <div class="eingabe">
+      <h2>Angaben</h2>
+      <label class="feld"><span>Abstand zum Therapieende</span>
+        <select data-f="ka_abstand"><option>6 Monate</option><option>12 Monate</option><option>3 Monate</option><option>24 Monate</option></select>
+      </label>
+      <label class="feld"><span>Absender (Ambulanz)</span><input data-f="ka_absender" maxlength="80"></label>
+      <label class="feld"><span>Behandelnde Person</span><input data-f="ka_behandler" maxlength="60"></label>
+      <label class="feld"><span>Rückmeldung bis</span><input type="date" data-f="ka_frist"></label>
+      <label class="feld"><span>Beigelegte Fragebogen</span><input data-f="ka_bogen" maxlength="80" placeholder="z. B. zwei kurze Bogen"></label>
+      <label class="feld"><span>Rückfragen unter</span><input data-f="ka_kontakt" maxlength="80"></label>
+    </div>
+    <div class="blatt" id="blatt-ka"></div>
+  </div>
+</section>
+
+</div>
+
+<script>
+"use strict";
+
+var SCHLUESSEL = "pia-abschlussmaterialien-v1";
+
+var CHECKLISTE = [
+  {k:"Ergebnis", t:"Zielerreichung anhand der bei Therapiebeginn vereinbarten Ziele bilanziert"},
+  {k:"Ergebnis", t:"Prä-Post-Vergleich der Verlaufsmessung gemeinsam durchgesehen"},
+  {k:"Ergebnis", t:"Restsymptomatik benannt und Weiterbehandlungsbedarf geklärt"},
+  {k:"Ergebnis", t:"Wirkfaktoren aus Sicht der Patientin oder des Patienten erfragt"},
+  {k:"Material", t:"Rezidivprophylaxe-Blatt gemeinsam erstellt und ausgehändigt"},
+  {k:"Material", t:"Krisenkarte ausgefüllt und ausgehändigt"},
+  {k:"Material", t:"Absprachen für den Umgang mit Frühwarnzeichen konkretisiert"},
+  {k:"Prozess", t:"Beendigung rechtzeitig angekündigt, Trennungsthema angesprochen"},
+  {k:"Prozess", t:"Frequenz vor dem Abschluss ausgeschlichen"},
+  {k:"Prozess", t:"Rezidivprophylaxe-Stunden verplant oder Termine vereinbart"},
+  {k:"Prozess", t:"Bei Abbruch: Grund dokumentiert, Wiederaufnahme angeboten"},
+  {k:"Formalia", t:"Abschlussdokumentation und Epikrise erstellt"},
+  {k:"Formalia", t:"Mitbehandelnde informiert, soweit Schweigepflichtentbindung vorliegt"},
+  {k:"Formalia", t:"Beendigung der Ambulanz gemeldet, Abrechnung abgeschlossen"},
+  {k:"Formalia", t:"Behandlungsplatz im Tracker auf abgeschlossen gesetzt"},
+  {k:"Formalia", t:"Falldarstellungs-Logbuch um Abschluss und Ergebnis ergänzt"},
+  {k:"Formalia", t:"Katamnese angekündigt, Einverständnis zur Kontaktaufnahme dokumentiert"},
+  {k:"Formalia", t:"Abschluss in der Supervision besprochen"}
+];
+
+function el(s){ return document.querySelector(s); }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
+function heuteIso(){ return new Date().toISOString().slice(0,10); }
+function datumDe(iso){ if(!iso) return "__________"; var t=String(iso).split("-"); return t.length===3? t[2]+"."+t[1]+"."+t[0] : iso; }
+
+function zeilen(text, mindestens){
+  var l=String(text||"").split("\n").map(function(x){ return x.trim(); }).filter(Boolean);
+  while(l.length < (mindestens||0)) l.push("");
+  return l;
+}
+function liste(text, mindestens, geordnet){
+  var l=zeilen(text, mindestens);
+  if(!l.length) return '<div class="leerzeile"></div><div class="leerzeile"></div>';
+  var tag = geordnet ? "ol" : "ul";
+  return "<"+tag+">"+l.map(function(x){
+    return x ? "<li>"+esc(x)+"</li>" : '<li><span class="leerzeile" style="display:block"></span></li>';
+  }).join("")+"</"+tag+">";
+}
+
+function laden(){
+  try{
+    var roh=window.localStorage.getItem(SCHLUESSEL);
+    var d=roh?JSON.parse(roh):null;
+    if(!d) throw new Error("leer");
+    if(!d.haken) d.haken={};
+    return d;
+  }catch(e){
+    return {felder:{rp_datum:heuteIso()}, haken:{}};
+  }
+}
+function sichern(){ try{ window.localStorage.setItem(SCHLUESSEL, JSON.stringify(daten)); }catch(e){} }
+var daten = laden();
+function f(k){ return daten.felder[k]||""; }
+
+/* ---------- Eingaben ---------- */
+document.addEventListener("input", function(ev){
+  var t=ev.target;
+  if(t.hasAttribute && t.hasAttribute("data-f")){
+    daten.felder[t.getAttribute("data-f")]=t.value;
+    sichern(); zeichneBlaetter();
+  }
+});
+document.addEventListener("change", function(ev){
+  var t=ev.target;
+  if(t.hasAttribute && t.hasAttribute("data-f")){
+    daten.felder[t.getAttribute("data-f")]=t.value;
+    sichern(); zeichneBlaetter();
+  }
+  if(t.hasAttribute && t.hasAttribute("data-haken")){
+    daten.haken[t.getAttribute("data-haken")]=t.checked;
+    sichern(); zeichneBlaetter();
+  }
+});
+
+function fuelleEingaben(){
+  var felder=document.querySelectorAll("[data-f]");
+  for(var i=0;i<felder.length;i++){
+    var k=felder[i].getAttribute("data-f");
+    if(daten.felder[k]!=null) felder[i].value=daten.felder[k];
+  }
+}
+
+/* ---------- Rezidivprophylaxe (P) ---------- */
+function blattRp(){
+  el("#blatt-rp").innerHTML =
+    '<h3>Mein Plan für die Zeit nach der Therapie</h3>'
+  + '<h4>Das hat mir geholfen</h4>'
+  +   liste(f("rp_geholfen"), 3)
+  + '<h4>Daran merke ich, dass es wieder losgeht</h4>'
+  +   '<p class="anweisung">Zeichen aufschreiben, die andere auch sehen könnten.</p>'
+  +   liste(f("rp_warn"), 4)
+  + '<h4>Das mache ich dann als Erstes</h4>'
+  +   '<p class="anweisung">Der Reihe nach abarbeiten. Nicht warten, bis es schlimmer wird.</p>'
+  +   liste(f("rp_schritte"), 3, true)
+  + '<h4>Das übe ich weiter</h4>'
+  +   '<p class="anweisung">Fest in die Woche einplanen.</p>'
+  +   liste(f("rp_ueben"), 3)
+  + '<h4>Diese Menschen kann ich ansprechen</h4>'
+  +   liste(f("rp_hilfe"), 3)
+  + '<div class="fuss">Gemeinsam erstellt am '+datumDe(f("rp_datum"))+'. Dieses Blatt gehört der Patientin oder dem Patienten.</div>';
+}
+
+/* ---------- Krisenkarte (P) ---------- */
+function blattKk(){
+  var schritte=zeilen(f("kk_schritte"),3).slice(0,3);
+  el("#karte-vor").innerHTML =
+    '<h3>Wenn es mir sehr schlecht geht</h3>'
+  + '<ol>'+schritte.map(function(x){ return '<li>'+(x?esc(x):"&nbsp;")+'</li>'; }).join("")+'</ol>'
+  + (f("kk_satz") ? '<p style="margin:2mm 0 0;font-style:italic">„'+esc(f("kk_satz"))+'“</p>' : '<p style="margin:2mm 0 0">&nbsp;</p>');
+
+  var zeile=function(name,wert){
+    return '<div class="zeile"><b>'+esc(name)+'</b><span>'+(wert?esc(wert):"&nbsp;")+'</span></div>';
+  };
+  el("#karte-rueck").innerHTML =
+    '<h3>Wen ich anrufe</h3>'
+  + zeile("Vertraute Person", f("kk_person"))
+  + zeile("Praxis / Ambulanz", f("kk_praxis"))
+  + zeile("Hausarztpraxis", f("kk_hausarzt"))
+  + zeile("Weitere Stelle", f("kk_weitere"))
+  + zeile("Ärztlicher Bereitschaftsdienst", "116 117")
+  + zeile("Telefonseelsorge", "0800 111 0 111 · 116 123")
+  + zeile("Notruf", "112")
+  + '<p style="margin:2mm 0 0;font-size:7.5pt">Bundesweite Nummern, rund um die Uhr erreichbar.</p>';
+}
+
+/* ---------- Abschlussgespräch (T) ---------- */
+function checkliste(){
+  var letzte="";
+  el("#checkliste").innerHTML = CHECKLISTE.map(function(p,i){
+    var kopf = p.k!==letzte ? '<li class="kat">'+esc(p.k)+'</li>' : "";
+    letzte=p.k;
+    return kopf + '<li><input type="checkbox" data-haken="'+i+'"'+(daten.haken[i]?" checked":"")+'><span>'+esc(p.t)+'</span></li>';
+  }).join("");
+}
+function blattCl(){
+  var offen=CHECKLISTE.filter(function(p,i){ return !daten.haken[i]; });
+  var erledigt=CHECKLISTE.length-offen.length;
+  var gruppen={};
+  CHECKLISTE.forEach(function(p,i){
+    if(!gruppen[p.k]) gruppen[p.k]=[];
+    gruppen[p.k].push({t:p.t, ok:!!daten.haken[i]});
+  });
+  el("#blatt-cl").innerHTML =
+    '<h3>Abschlussgespräch — Checkliste</h3>'
+  + '<p class="anweisung">Stand: '+erledigt+' von '+CHECKLISTE.length+' erledigt.</p>'
+  + Object.keys(gruppen).map(function(k){
+      return '<h4>'+esc(k)+'</h4><ul class="kasten">'
+        + gruppen[k].map(function(p){
+            return '<li'+(p.ok?' style="text-decoration:line-through;color:#5E6B76"':'')+'>'+esc(p.t)+'</li>';
+          }).join("")
+        + '</ul>';
+    }).join("")
+  + '<div class="fuss">Behandlerblatt. Institutsvorgaben zu Dokumentation, Meldung und Abrechnung ergänzen.</div>';
+}
+
+/* ---------- Katamnese (T) ---------- */
+function blattKa(){
+  var abstand=f("ka_abstand")||"6 Monate";
+  el("#blatt-ka").innerHTML =
+    '<h3>Anschreiben zur Nachbefragung</h3>'
+  + '<p class="anweisung">Nur versenden, wenn das Einverständnis zur Kontaktaufnahme schriftlich vorliegt.</p>'
+  + '<p style="margin-top:14px">'+esc(f("ka_absender")||"[Ambulanz]")+'<br>'+datumDe(heuteIso())+'</p>'
+  + '<p style="margin-top:14px">Sehr geehrte Frau / sehr geehrter Herr __________,</p>'
+  + '<p>vor etwa '+esc(abstand)+' haben wir Ihre Behandlung bei uns abgeschlossen. Wir möchten gern wissen, wie es Ihnen seitdem geht.</p>'
+  + '<p>Dafür haben wir '+esc(f("ka_bogen")||"einige kurze Fragebogen")+' beigelegt. Das Ausfüllen dauert nur wenige Minuten. Schicken Sie die Bogen im beiliegenden Umschlag bis zum '+datumDe(f("ka_frist"))+' zurück.</p>'
+  + '<p>Ihre Angaben helfen uns einzuschätzen, was die Behandlung längerfristig gebracht hat. Die Teilnahme ist freiwillig. Wenn Sie nicht antworten möchten, entstehen Ihnen daraus keine Nachteile.</p>'
+  + '<p>Falls es Ihnen im Moment nicht gut geht, melden Sie sich gern bei uns. Wir besprechen dann, wie es weitergehen kann.</p>'
+  + '<p style="margin-top:14px">Mit freundlichen Grüßen<br>'+esc(f("ka_behandler")||"[Behandelnde Person]")+'</p>'
+  + (f("ka_kontakt") ? '<p style="margin-top:12px">Rückfragen: '+esc(f("ka_kontakt"))+'</p>' : "")
+  + '<div class="fuss">Vorlage. Vor dem Versand mit den Vorgaben der Ambulanz zu Datenschutz, Einwilligung und Postversand abgleichen.</div>';
+}
+
+function zeichneBlaetter(){ blattRp(); blattKk(); blattCl(); blattKa(); }
+
+/* ---------- Reiter ---------- */
+var reiter=[["tab-rp","ansicht-rp"],["tab-kk","ansicht-kk"],["tab-cl","ansicht-cl"],["tab-ka","ansicht-ka"]];
+reiter.forEach(function(paar){
+  document.getElementById(paar[0]).addEventListener("click", function(){
+    reiter.forEach(function(p){
+      var aktiv=p[0]===paar[0];
+      document.getElementById(p[0]).setAttribute("aria-selected",aktiv?"true":"false");
+      document.getElementById(p[1]).hidden=!aktiv;
+    });
+  });
+});
+
+/* ---------- Sichern / Laden ---------- */
+el("#btn-export").addEventListener("click", function(){
+  var blob=new Blob([JSON.stringify(daten,null,2)],{type:"application/json"});
+  var a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="abschlussmaterialien-"+heuteIso()+".json";
+  a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); },1000);
+});
+el("#btn-import").addEventListener("click", function(){ el("#datei").click(); });
+el("#datei").addEventListener("change", function(ev){
+  var datei=ev.target.files[0]; if(!datei) return;
+  var leser=new FileReader();
+  leser.onload=function(){
+    try{
+      var neu=JSON.parse(leser.result);
+      if(!neu||!neu.felder) throw new Error("Format");
+      daten=neu; if(!daten.haken) daten.haken={};
+      sichern(); fuelleEingaben(); checkliste(); zeichneBlaetter();
+    }catch(e){ window.alert("Die Datei lässt sich nicht lesen. Erwartet wird eine Sicherung aus diesem Werkzeug."); }
+    ev.target.value="";
+  };
+  leser.readAsText(datei);
+});
+
+/* ---------- Offlinebetrieb ---------- */
+(function(){
+  if(!("serviceWorker" in navigator)) return;
+  if(location.protocol!=="http:" && location.protocol!=="https:") return;
+  window.addEventListener("load", function(){ navigator.serviceWorker.register("sw.js").catch(function(){}); });
+})();
+
+
+/* ---------- Gemeinsames Fallverzeichnis (seitenübergreifend) ---------- */
+var FALLVERZEICHNIS = "pia-faelle-v1";
+function verzeichnisLesen(){
+  try{
+    var r=window.localStorage.getItem(FALLVERZEICHNIS);
+    var d=r?JSON.parse(r):null;
+    return (d && Array.isArray(d.faelle)) ? d.faelle : [];
+  }catch(e){ return []; }
+}
+function verzeichnisFall(code){
+  var l=verzeichnisLesen();
+  for(var i=0;i<l.length;i++){ if(l[i].code===code) return l[i]; }
+  return null;
+}
+function verzeichnisSchreiben(code, zusatz){
+  if(!code) return;
+  try{
+    var liste=verzeichnisLesen(), e=null;
+    for(var i=0;i<liste.length;i++){ if(liste[i].code===code){ e=liste[i]; break; } }
+    if(!e){ e={code:code}; liste.push(e); }
+    if(zusatz) for(var k in zusatz){ if(zusatz[k]!=null && zusatz[k]!=="") e[k]=zusatz[k]; }
+    window.localStorage.setItem(FALLVERZEICHNIS, JSON.stringify({faelle:liste}));
+  }catch(err){}
+}
+function fallDatalist(){
+  var d=document.getElementById("fallcodes");
+  if(!d){ d=document.createElement("datalist"); d.id="fallcodes"; document.body.appendChild(d); }
+  d.innerHTML=verzeichnisLesen().map(function(f){
+    var b=[f.bereich, (f.stand!=null?"Sitzung "+f.stand:null), f.status].filter(Boolean).join(" · ");
+    return '<option value="'+String(f.code).replace(/"/g,"&quot;")+'">'+String(b).replace(/</g,"&lt;")+'</option>';
+  }).join("");
+  var e=document.querySelectorAll("[data-fallcode]");
+  for(var i=0;i<e.length;i++) e[i].setAttribute("list","fallcodes");
+}
+
+fuelleEingaben(); checkliste(); zeichneBlaetter(); fallDatalist();
+
+/* ---------- Sicherungserinnerung ---------- */
+(function(){
+  var SICHERUNGSSTAND="pia-sicherung-v1";
+  var letzte=null;
+  try{ var d=JSON.parse(window.localStorage.getItem(SICHERUNGSSTAND)||"null"); letzte=d&&d.letzte?d.letzte:null; }catch(e){}
+  var tage = letzte ? Math.floor((Date.now()-new Date(letzte).getTime())/86400000) : null;
+  if(tage!==null && tage<7) return;
+  try{ if(window.sessionStorage.getItem("pia-erinnerung-weg")) return; }catch(e){}
+  var leiste=document.createElement("div");
+  leiste.setAttribute("role","status");
+  leiste.style.cssText="position:sticky;top:0;z-index:40;display:flex;gap:12px;align-items:center;flex-wrap:wrap;"
+    + "background:#B26A0F;color:#fff;font-size:13px;padding:9px 16px;font-family:inherit";
+  var text=document.createElement("span");
+  text.textContent = letzte
+    ? "Letzte Gesamtsicherung vor "+tage+" Tagen. Die Daten liegen nur in diesem Browser."
+    : "Noch keine Gesamtsicherung erstellt. Die Daten liegen nur in diesem Browser.";
+  var link=document.createElement("a");
+  link.href="sicherung.html";
+  link.textContent="Jetzt sichern";
+  link.style.cssText="color:#fff;font-weight:600;text-decoration:underline";
+  var weg=document.createElement("button");
+  weg.type="button";
+  weg.textContent="später";
+  weg.style.cssText="margin-left:auto;background:transparent;border:1px solid rgba(255,255,255,.5);color:#fff;"
+    + "border-radius:3px;padding:4px 9px;font:inherit;font-size:12.5px;cursor:pointer";
+  weg.addEventListener("click", function(){
+    try{ window.sessionStorage.setItem("pia-erinnerung-weg","1"); }catch(e){}
+    leiste.remove();
+  });
+  leiste.appendChild(text); leiste.appendChild(link); leiste.appendChild(weg);
+  document.body.insertBefore(leiste, document.body.firstChild);
+})();
+
+</script>
+</body>
+</html>
