@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modul-Landkarten</title>
+<meta name="description" content="Sitzungsarchitektur je Störungsbild: Module, Reihenfolge, Bausteine und Stolpersteine, skaliert auf die geplante Sitzungszahl.">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#141C24">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>
+:root{
+  --papier:#EEF1F2; --karte:#FFFFFF; --tinte:#141C24; --grau:#5E6B76; --linie:#D3DADE;
+  --blau:#28536B; --blau-hell:#E4EBEF;
+  --bernstein:#B26A0F; --bernstein-hell:#FBEEDA;
+  --rot:#9C3B31; --rot-hell:#F7E3E0;
+  --gruen:#2C6E60; --gruen-hell:#E0EDE9;
+  --mono:ui-monospace,"SF Mono","DejaVu Sans Mono",Menlo,Consolas,monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--papier);color:var(--tinte);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:940px;margin:0 auto;padding:26px 20px 90px}
+
+header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;border-bottom:2px solid var(--tinte);padding-bottom:13px}
+header.top h1{font-size:20px;font-weight:650;margin:0;letter-spacing:-.01em}
+header.top .sub{font-size:12.5px;color:var(--grau);margin-top:3px}
+header.top .sub a{color:var(--blau)}
+.werkzeuge{display:flex;gap:8px;flex-wrap:wrap}
+
+button{font:inherit;font-size:13px;border:1px solid var(--linie);background:var(--karte);color:var(--tinte);border-radius:3px;padding:6px 11px;cursor:pointer}
+button:hover{border-color:var(--blau);color:var(--blau)}
+button:focus-visible{outline:2px solid var(--blau);outline-offset:2px}
+button.primaer{background:var(--blau);border-color:var(--blau);color:#fff}
+button.primaer:hover{background:#1D4054;color:#fff}
+
+.steuerleiste{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--karte);border:1px solid var(--linie);border-radius:4px;padding:14px 16px;margin:18px 0}
+label.feld{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--grau);text-transform:uppercase;letter-spacing:.05em}
+label.feld input,label.feld select{font:inherit;font-size:14px;color:var(--tinte);text-transform:none;letter-spacing:0;border:1px solid var(--linie);border-radius:3px;padding:6px 8px;background:#fff}
+label.feld input:focus,label.feld select:focus{outline:2px solid var(--blau);border-color:var(--blau)}
+.w-gross select{width:340px;max-width:100%}
+.w-klein input{width:104px}
+
+.hinweis{font-size:12.5px;color:var(--grau);background:var(--bernstein-hell);border-left:3px solid var(--bernstein);color:var(--bernstein);padding:9px 12px;margin-bottom:18px;border-radius:0 3px 3px 0}
+
+/* Landkarte */
+.landkarte{background:var(--karte);border:1px solid var(--linie);border-radius:4px;padding:16px;margin-bottom:18px}
+.streifen{display:flex;height:34px;border-radius:3px;overflow:hidden;border:1px solid var(--linie)}
+.streifen div{position:relative;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;color:#fff;overflow:hidden;white-space:nowrap}
+.achse{position:relative;height:30px;margin-top:6px;border-top:1px solid var(--linie)}
+.achse span{position:absolute;top:4px;transform:translateX(-50%);font-family:var(--mono);font-size:11px;color:var(--grau);white-space:nowrap}
+.achse span.betont{color:var(--rot)}
+.achse i{position:absolute;top:-1px;width:1px;height:7px;background:var(--linie)}
+.achse i.betont{background:var(--rot);height:11px}
+
+/* Module */
+.modul{background:var(--karte);border:1px solid var(--linie);border-radius:4px;padding:14px 16px;margin-bottom:11px;border-left:4px solid var(--blau)}
+.modul.erledigt{opacity:.6}
+.modul-kopf{display:flex;align-items:baseline;gap:11px;flex-wrap:wrap}
+.modul-kopf h2{font-size:15px;margin:0;font-weight:650}
+.spanne{font-family:var(--mono);font-size:12.5px;color:var(--grau);white-space:nowrap}
+.modul-kopf .rechts{margin-left:auto;display:flex;align-items:center;gap:9px}
+.ziel{font-size:13.5px;color:var(--grau);margin:6px 0 9px}
+.bausteine{margin:0 0 9px;padding-left:18px;font-size:14px}
+.bausteine li{margin-bottom:3px}
+.stolper{font-size:13px;background:var(--bernstein-hell);color:var(--bernstein);border-radius:3px;padding:7px 10px}
+.stolper b{font-weight:600}
+label.haken{font-size:13px;display:flex;align-items:center;gap:6px;color:var(--grau)}
+
+.notiz{width:100%;font:inherit;font-size:14px;border:1px solid var(--linie);border-radius:3px;padding:8px 10px;background:#fff;margin-top:9px;min-height:52px;resize:vertical}
+.notiz:focus{outline:2px solid var(--blau);border-color:var(--blau)}
+
+footer.quelle{margin-top:28px;padding-top:14px;border-top:1px solid var(--linie);font-size:12px;color:var(--grau)}
+footer.quelle a{color:var(--blau)}
+footer.quelle p{margin:0 0 8px}
+
+@media print{
+  body{background:#fff}
+  .werkzeuge,.steuerleiste,.notiz{display:none}
+  .modul{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div>
+    <h1>Modul-Landkarten</h1>
+    <div class="sub">Sitzungsarchitektur je Störungsbild · <a href="./">Behandlungsplätze</a> · <a href="bericht.html">Berichtsbaukasten</a> · <a href="logbuch.html">Logbuch</a> · <a href="abschluss.html">Abschluss</a> · <a href="monitoring.html">Monitoring</a></div>
+  </div>
+  <div class="werkzeuge">
+    <button id="btn-text">Plan ausgeben</button>
+    <button onclick="window.print()">Drucken</button>
+  </div>
+</header>
+
+<p class="hinweis">
+  Die Modulfolgen sind ein Planungsraster aus der verhaltenstherapeutischen Manualliteratur, keine Leitlinienvorgabe. Die Leitlinien empfehlen Verfahren und Bausteine, nicht die Zahl der Sitzungen pro Modul. Der individuelle Behandlungsplan geht immer vor, ebenso die Vorgaben der Ausbildungsambulanz.
+</p>
+
+<div class="steuerleiste">
+  <label class="feld w-gross">Störungsbild<select id="stoerung"></select></label>
+  <label class="feld w-klein">Sitzungen<input id="sitzungen" type="number" min="8" max="120" step="1" value="24"></label>
+  <label class="feld w-klein">Fallcode<input id="code" data-fallcode maxlength="12" placeholder="A-01"></label>
+  <button id="btn-zuruecksetzen">Haken zurücksetzen</button>
+</div>
+
+<div class="landkarte">
+  <div class="streifen" id="streifen"></div>
+  <div class="achse" id="achse"></div>
+</div>
+
+<div id="module"></div>
+
+<footer class="quelle" id="quelle"></footer>
+
+</div>
+
+<script>
+"use strict";
+
+var SCHLUESSEL = "pia-modullandkarten-v1";
+var FARBEN = ["#28536B","#31627C","#3A718D","#2C6E60","#3A7F70","#B26A0F","#5E6B76"];
+
+var GRUPPEN = ["Angst und Zwang","Trauma und Belastung","Affektive Störungen","Essstörungen","Sucht","Somatisches und Schlaf","Persönlichkeit und schwere Erkrankungen","Weitere"];
+
+var LL = {
+  angst:{q:"S3-Leitlinie Behandlung von Angststörungen, AWMF 051-028, Version 2.0, Stand 06.04.2021, Gültigkeit bis 05.04.2026 abgelaufen — Fortschreibung prüfen.", l:"https://register.awmf.org/de/leitlinien/detail/051-028"},
+  zwang:{q:"S3-Leitlinie Zwangsstörungen, AWMF 038-017, Stand 30.06.2022, gültig bis 29.06.2027.", l:"https://register.awmf.org/de/leitlinien/detail/038-017"},
+  ptbs:{q:"S3-Leitlinie Posttraumatische Belastungsstörung, AWMF 155-001. Die Fassung von 2019 war bis 29.04.2024 gültig; im Register liegt ein Dokument mit Stand 2026 — aktuelle Fassung dort prüfen.", l:"https://register.awmf.org/de/leitlinien/detail/155-001"},
+  depression:{q:"Nationale VersorgungsLeitlinie Unipolare Depression, Version 3, verabschiedet am 29.09.2022, gültig bis spätestens 29.09.2027.", l:"https://register.awmf.org/de/leitlinien/detail/nvl-005"},
+  bipolar:{q:"S3-Leitlinie Diagnostik und Therapie Bipolarer Störungen, AWMF 038-019. Gültigkeit bis Februar 2024 abgelaufen, Leitlinie in Überarbeitung — Stand im Register prüfen.", l:"https://register.awmf.org/de/leitlinien/detail/038-019"},
+  ess:{q:"S3-Leitlinie Diagnostik und Therapie der Essstörungen, AWMF 051-026, Stand 31.05.2018, Gültigkeit bis 30.05.2023 abgelaufen, in Überarbeitung — Stand im Register prüfen.", l:"https://register.awmf.org/de/leitlinien/detail/051-026"},
+  koerper:{q:"S3-Leitlinie Funktionelle Körperbeschwerden, AWMF 051-001, Stand 18.07.2018, Gültigkeit bis 17.07.2023 abgelaufen, in Überarbeitung — Stand im Register prüfen.", l:"https://register.awmf.org/de/leitlinien/detail/051-001"},
+  alkohol:{q:"S3-Leitlinie Screening, Diagnostik und Behandlung alkoholbezogener Störungen, AWMF 076-001, Stand 01.01.2021, Gültigkeit bis 31.12.2025 abgelaufen, in Überarbeitung — Stand im Register prüfen.", l:"https://register.awmf.org/de/leitlinien/detail/076-001"},
+  tabak:{q:"S3-Leitlinie Rauchen und Tabakabhängigkeit: Screening, Diagnostik und Behandlung, AWMF 076-006, Stand 01.01.2021, Gültigkeit bis 31.12.2025 abgelaufen — Stand im Register prüfen.", l:"https://register.awmf.org/de/leitlinien/detail/076-006"},
+  borderline:{q:"S3-Leitlinie Borderline-Persönlichkeitsstörung, AWMF 038-015, Stand 14.11.2022, Gültigkeit bis 31.05.2026 abgelaufen — Fortschreibung prüfen.", l:"https://register.awmf.org/de/leitlinien/detail/038-015"},
+  schizo:{q:"S3-Leitlinie Schizophrenie, AWMF 038-009, Fassung 2019, Gültigkeit bis 31.03.2023 abgelaufen, in Überarbeitung — Stand im Register prüfen.", l:"https://register.awmf.org/de/leitlinien/detail/038-009"},
+  adhs:{q:"S3-Leitlinie ADHS bei Kindern, Jugendlichen und Erwachsenen, AWMF 028-045, Stand 02.05.2017, Gültigkeit bis 01.05.2022 abgelaufen, in Überarbeitung — Stand im Register prüfen.", l:"https://register.awmf.org/de/leitlinien/detail/028-045"},
+  schlaf:{q:"Für die Insomnie im Erwachsenenalter ist die einschlägige S3-Leitlinie der Deutschen Gesellschaft für Schlafforschung und Schlafmedizin maßgeblich. Registernummer und Stand im AWMF-Register prüfen.", l:"https://register.awmf.org/de/leitlinien"},
+  keine:{q:"Für dieses Störungsbild liegt keine spezifische deutsche S3-Leitlinie vor. Die Modulfolge stützt sich auf die verhaltenstherapeutische Manualliteratur. Verfahrenswahl und Indikation entsprechend eigenständig begründen.", l:"https://register.awmf.org/de/leitlinien"}
+};
+
+var LANDKARTEN = {
+  panik: {
+    name:"Panikstörung und Agoraphobie", gruppe:"Angst und Zwang", ll:"angst",
+    module:[
+      {t:"Diagnostik und Beziehungsaufbau", a:0.10,
+       ziel:"Diagnose sichern, somatische Abklärung prüfen, Arbeitsbündnis herstellen.",
+       b:["Störungsspezifische Exploration, Panikprotokoll einführen","Konsiliarbericht und somatische Ausschlussdiagnostik sichten","Vermeidung und Sicherheitsverhalten erfassen","Eingangsmessung"],
+       s:"Rückversicherung durch weitere somatische Abklärung nicht mittragen, wenn sie bereits erfolgt ist."},
+      {t:"Psychoedukation und individuelles Störungsmodell", a:0.12,
+       ziel:"Teufelskreis der Angst gemeinsam erarbeiten, Rationale für Exposition legen.",
+       b:["Aufschaukelungsmodell am eigenen Panikprotokoll entwickeln","Rolle von Vermeidung und Sicherheitsverhalten herausarbeiten","Therapierationale und Ziele schriftlich festhalten"],
+       s:"Das Modell zu früh vom Blatt erklären. Es trägt nur, wenn es am eigenen Beispiel entsteht."},
+      {t:"Interozeptive Exposition", a:0.12,
+       ziel:"Körpersymptome als ungefährlich erfahrbar machen.",
+       b:["Symptomprovokation in der Sitzung (Hyperventilation, Drehen, Treppensteigen)","Bewertungen vor und nach der Übung erheben","Übertragung in das häusliche Üben"],
+       s:"Übungen zu kurz oder mit Sicherheitsverhalten durchführen — dann bleibt die Erwartungsverletzung aus."},
+      {t:"Exposition in vivo, therapeutenbegleitet", a:0.26,
+       ziel:"Vermeidung in den zentralen Situationen abbauen.",
+       b:["Hierarchie erstellen, mit hoher statt geringer Intensität einsteigen","Mehrstündige Sitzungen einplanen und mit der Ambulanz abstimmen","Erwartung vor der Übung explizit machen, danach abgleichen","Sicherheitsverhalten schrittweise streichen"],
+       s:"Terminlogistik. Begleitete Expositionen brauchen Doppelstunden und eine Absprache zur Abrechnung."},
+      {t:"Exposition in Eigenregie", a:0.16,
+       ziel:"Transfer sichern, Selbstwirksamkeit aufbauen.",
+       b:["Wochenpläne für selbstständige Übungen","Protokoll und Auswertung in der Sitzung","Schwierige Situationen gezielt nachlegen"],
+       s:"Zu früher Rückzug der Begleitung führt zu Abbrüchen der Übungen."},
+      {t:"Kognitive Arbeit und Alltagstransfer", a:0.12,
+       ziel:"Katastrophenbewertungen bearbeiten, Funktionsniveau erweitern.",
+       b:["Überprüfung von Erwartungen mit Verhaltensexperimenten","Arbeits-, Mobilitäts- und Sozialaktivitäten wieder aufnehmen","Komorbide Belastungen adressieren"],
+       s:"Kognitive Arbeit als Ersatz für Exposition verwenden."},
+      {t:"Rezidivprophylaxe und Abschluss", a:0.12,
+       ziel:"Ergebnis sichern, Rückfallsignale und Vorgehen festhalten.",
+       b:["Abschlussmessung und Vergleich mit dem Ausgangswert","Notfall- und Rückfallplan schriftlich","Reduktion der Frequenz, Abschlussgespräch","Rezidivprophylaxe-Stunden einplanen"],
+       s:"Die Rezidivprophylaxe-Stunden nicht vorab reserviert zu haben."}
+    ]
+  },
+  sozial: {
+    name:"Soziale Angststörung", gruppe:"Angst und Zwang", ll:"angst",
+    module:[
+      {t:"Diagnostik und Beziehungsaufbau", a:0.10,
+       ziel:"Diagnose sichern, Komorbidität klären, Beschämung in der Situation selbst berücksichtigen.",
+       b:["Abgrenzung zur vermeidend-selbstunsicheren Persönlichkeitsstörung","Situationsanalyse typischer sozialer Situationen","Eingangsmessung"],
+       s:"Die Therapiesituation ist selbst eine soziale Leistungssituation. Tempo entsprechend wählen."},
+      {t:"Individuelles Modell", a:0.12,
+       ziel:"Selbstaufmerksamkeit, Sicherheitsverhalten und Nachverarbeitung sichtbar machen.",
+       b:["Aufmerksamkeitsfokus und inneres Selbstbild herausarbeiten","Sicherheitsverhalten inventarisieren","Antizipation und Nachverarbeitung als eigene Schleifen benennen"],
+       s:"Sicherheitsverhalten wird oft nicht berichtet, weil es als normal erlebt wird."},
+      {t:"Aufmerksamkeitslenkung und Rückmeldung", a:0.12,
+       ziel:"Diskrepanz zwischen Selbstbild und Außenwirkung erfahrbar machen.",
+       b:["Übungen zur Aufmerksamkeitsverschiebung nach außen","Videofeedback mit vorheriger Vorhersage","Auswertung der Diskrepanz"],
+       s:"Videofeedback ohne vorherige konkrete Vorhersage verliert seinen Effekt."},
+      {t:"Verhaltensexperimente und Exposition", a:0.28,
+       ziel:"Befürchtete Konsequenzen prüfen statt Angst aushalten.",
+       b:["Experimente mit klarer Vorhersage und Prüfkriterium","Bewusster Verzicht auf Sicherheitsverhalten","Auch bewusst Fehler provozieren"],
+       s:"Erfolge werden externalisiert. Die Auswertung braucht Zeit."},
+      {t:"Kognitive Arbeit an Bewertungen", a:0.16,
+       ziel:"Normen, Standards und Nachverarbeitung bearbeiten.",
+       b:["Überhöhte soziale Standards prüfen","Nachverarbeitung nach Situationen unterbrechen","Selbstwertbezogene Grundannahmen"],
+       s:"Grübeln über soziale Situationen als Bearbeitung missverstehen."},
+      {t:"Kompetenzen und Alltagstransfer", a:0.10,
+       ziel:"Handlungsspielraum erweitern, wo tatsächlich Defizite bestehen.",
+       b:["Gezieltes Training nur bei echtem Fertigkeitsdefizit","Aufbau sozialer Aktivitäten","Beruflicher Transfer"],
+       s:"Kompetenztraining anbieten, wo das Problem in der Bewertung liegt, nicht im Können."},
+      {t:"Rezidivprophylaxe und Abschluss", a:0.12,
+       ziel:"Ergebnis sichern, Rückfallsignale festhalten.",
+       b:["Abschlussmessung","Rückfallplan mit konkreten Situationen","Frequenzreduktion, Abschlussgespräch"],
+       s:"Vermeidung schleicht sich nach Therapieende leise zurück. Konkrete Weiterübungen vereinbaren."}
+    ]
+  },
+  gas: {
+    name:"Generalisierte Angststörung", gruppe:"Angst und Zwang", ll:"angst",
+    module:[
+      {t:"Diagnostik und Beziehungsaufbau", a:0.10,
+       ziel:"Sorgeninhalte, Dauer und Funktionsniveau erfassen, somatische Beschwerden einordnen.",
+       b:["Sorgentagebuch einführen","Abgrenzung zu Depression und somatoformen Störungen","Eingangsmessung"],
+       s:"Die Sorgen wirken alltagsnah und plausibel — das erschwert die Darstellung der Störungswertigkeit im Bericht."},
+      {t:"Modell der Sorgen", a:0.14,
+       ziel:"Sorgenketten, Metasorgen und Unsicherheitsintoleranz herausarbeiten.",
+       b:["Positive und negative Annahmen über das Sorgen sammeln","Sorgenkette bis zum Endpunkt verfolgen","Rückversicherung und Vermeidung als Aufrechterhaltung"],
+       s:"Am Inhalt der einzelnen Sorge arbeiten statt am Prozess des Sorgens."},
+      {t:"Sorgenkonfrontation in sensu", a:0.22,
+       ziel:"Den befürchteten Endpunkt aushalten statt zu vermeiden.",
+       b:["Szenario schriftlich ausarbeiten und wiederholt konfrontieren","Kognitive Vermeidung während der Übung unterbinden","Habituation und Bewertungsänderung auswerten"],
+       s:"Abbruch der Übung im Moment der stärksten Belastung."},
+      {t:"Abbau von Rückversicherung und Kontrolle", a:0.16,
+       ziel:"Sicherheitsverhalten im Alltag streichen.",
+       b:["Rückversicherungsverhalten inventarisieren und stufenweise reduzieren","Angehörige einbeziehen","Toleranz gegenüber Ungewissheit üben"],
+       s:"Rückversicherung über Suchmaschinen und Angehörige wird selten spontan berichtet."},
+      {t:"Problemlösen und Alltag", a:0.14,
+       ziel:"Lösbare von unlösbaren Sorgen trennen.",
+       b:["Problemlöseschritte an realen Anliegen","Sorgenzeit als Übergangstechnik","Aktivitätsaufbau"],
+       s:"Problemlösetraining verstärkt das Sorgen, wenn es auf unlösbare Sorgen angewandt wird."},
+      {t:"Anspannungsregulation", a:0.10,
+       ziel:"Körperliche Daueranspannung senken.",
+       b:["Angewandte Entspannung","Schlafhygiene bei begleitender Insomnie"],
+       s:"Entspannung wird zum neuen Sicherheitsverhalten, wenn sie zur Angstvermeidung eingesetzt wird."},
+      {t:"Rezidivprophylaxe und Abschluss", a:0.14,
+       ziel:"Ergebnis sichern, Frühwarnzeichen festhalten.",
+       b:["Abschlussmessung","Rückfallplan","Frequenzreduktion, Abschlussgespräch"],
+       s:"Sorgen kehren unter Belastung zurück. Der Plan sollte das als erwartbar benennen."}
+    ]
+  },
+  phobie: {
+    name:"Spezifische Phobie", gruppe:"Angst und Zwang", ll:"angst",
+    module:[
+      {t:"Diagnostik und Beziehungsaufbau", a:0.14,
+       ziel:"Phobietyp, Auslöser und Beeinträchtigung klären, Komorbidität ausschließen.",
+       b:["Situations- und Vermeidungsanalyse","Bei Blut-Spritzen-Verletzungstyp: Ohnmachtsneigung erfassen","Eingangsmessung"],
+       s:"Die Störung wirkt umschrieben — Beeinträchtigung und Störungswertigkeit müssen im Bericht klar belegt sein."},
+      {t:"Psychoedukation und Modell", a:0.14,
+       ziel:"Vermeidungslernen erklären, Rationale für Konfrontation legen.",
+       b:["Individuelles Modell mit Auslöser, Reaktion und Vermeidung","Hierarchie erstellen","Bei Blut-Spritzen-Typ: angewandte Anspannung einführen"],
+       s:"Entspannungsverfahren als Vorbereitung anbieten, wo sie später zum Sicherheitsverhalten werden."},
+      {t:"Konfrontation, begleitet", a:0.36,
+       ziel:"Die gefürchtete Situation ohne Vermeidung erleben.",
+       b:["Massierte Konfrontation, wo möglich in einer langen Sitzung","Erwartung vor und nach der Übung erheben","Sicherheitsverhalten konsequent weglassen"],
+       s:"Zu kurze Sitzungen. Spezifische Phobien lassen sich oft in wenigen langen Terminen behandeln."},
+      {t:"Selbstständige Übungen und Generalisierung", a:0.18,
+       ziel:"Übertragung auf verwandte Situationen.",
+       b:["Übungsplan für den Alltag","Variation von Ort, Zeit und Intensität","Protokoll und Auswertung"],
+       s:"Übung bleibt auf die eine geübte Situation beschränkt."},
+      {t:"Kognitive Nacharbeit", a:0.08,
+       ziel:"Verbliebene Bewertungen prüfen.",
+       b:["Restüberzeugungen mit Verhaltensexperimenten testen","Umgang mit Erwartungsangst"],
+       s:"Diskussion über Wahrscheinlichkeiten statt Erfahrung."},
+      {t:"Rezidivprophylaxe und Abschluss", a:0.10,
+       ziel:"Ergebnis sichern, Weiterüben vereinbaren.",
+       b:["Abschlussmessung","Plan für regelmäßiges Aufsuchen der Situation","Abschlussgespräch"],
+       s:"Ohne Weiterüben kehrt die Vermeidung zurück."}
+    ]
+  },
+  zwang: {
+    name:"Zwangsstörung", gruppe:"Angst und Zwang", ll:"zwang",
+    module:[
+      {t:"Diagnostik und Beziehungsaufbau", a:0.12,
+       ziel:"Zwangsinhalte vollständig erfassen, Scham berücksichtigen.",
+       b:["Systematische Erfassung von Zwangsgedanken und -handlungen","Protokoll über Häufigkeit und Zeitaufwand","Komorbide Depression erfassen","Eingangsmessung"],
+       s:"Aggressive oder sexuelle Zwangsgedanken werden aus Scham verschwiegen. Aktiv und normalisierend erfragen."},
+      {t:"Modell und Vorbereitung", a:0.12,
+       ziel:"Aufrechterhaltung durch Neutralisieren verstehen, Rationale für Exposition legen.",
+       b:["Zusammenhang von Anspannung, Zwangshandlung und kurzfristiger Erleichterung","Hierarchie der Situationen erstellen","Vorgehen und Belastungsverlauf transparent machen"],
+       s:"Zu spät mit der Exposition beginnen. Die Vorbereitung darf die Behandlung nicht ersetzen."},
+      {t:"Exposition mit Reaktionsmanagement, begleitet", a:0.32,
+       ziel:"Konfrontation ohne Neutralisieren, auch am Ort des Geschehens.",
+       b:["Übungen in der Sitzung und im häuslichen Umfeld","Vollständiger Verzicht auf offene und verdeckte Neutralisierung","Lange Sitzungen einplanen, Absprache mit der Ambulanz","Erwartung vor der Übung, Abgleich danach"],
+       s:"Verdecktes Neutralisieren bleibt unbemerkt und macht die Übung wirkungslos."},
+      {t:"Selbstständige Übungen", a:0.16,
+       ziel:"Transfer und Generalisierung.",
+       b:["Wochenpläne mit Protokoll","Auswertung in der Sitzung","Neue Situationen ergänzen"],
+       s:"Übungen bleiben auf die therapeutisch begleiteten Situationen beschränkt."},
+      {t:"Kognitive Arbeit", a:0.12,
+       ziel:"Verantwortungsüberschätzung und Bedeutung von Gedanken bearbeiten.",
+       b:["Überhöhte Verantwortung prüfen","Gleichsetzung von Gedanke und Handlung bearbeiten","Perfektionismus und Kontrollbedürfnis"],
+       s:"Kognitive Arbeit wird zur neuen Form der Rückversicherung."},
+      {t:"Umfeld und Einbezug", a:0.08,
+       ziel:"Beteiligung von Angehörigen an Zwangsritualen beenden.",
+       b:["Angehörigengespräch","Abbau von Rückversicherung durch Dritte","Absprachen für den Alltag"],
+       s:"Angehörige sind oft fest ins Ritual eingebunden und brauchen ein eigenes Vorgehen."},
+      {t:"Rezidivprophylaxe und Abschluss", a:0.08,
+       ziel:"Ergebnis sichern, Umgang mit Rückkehr der Symptomatik festhalten.",
+       b:["Abschlussmessung","Rückfallplan mit konkreten Übungen","Frequenzreduktion, Abschlussgespräch"],
+       s:"Zwänge kehren unter Belastung zurück. Der Plan sollte Wiederaufnahme des Übens vorsehen."}
+    ]
+  },
+  ptbs: {
+    name:"Posttraumatische Belastungsstörung", gruppe:"Trauma und Belastung", ll:"ptbs",
+    module:[
+      {t:"Diagnostik, Sicherheit, Stabilität", a:0.16,
+       ziel:"Diagnose sichern, äußere Sicherheit klären, ambulante Behandelbarkeit prüfen.",
+       b:["Traumaanamnese ohne Detailexploration in der Frühphase","Äußere Sicherheit, Täterkontakt, laufende Verfahren klären","Komorbidität, Dissoziation und Substanzkonsum erfassen","Eingangsmessung"],
+       s:"Konfrontation planen, solange die äußere Sicherheit nicht geklärt ist."},
+      {t:"Psychoedukation, Ressourcen, Modell", a:0.12,
+       ziel:"Symptome einordnen, Handlungsfähigkeit stärken.",
+       b:["Erklärung von Intrusionen, Vermeidung und Übererregung","Ressourcen- und Stabilisierungstechniken","Umgang mit Dissoziation"],
+       s:"Stabilisierung unbegrenzt ausdehnen und die Konfrontation dadurch dauerhaft aufschieben."},
+      {t:"Vorbereitung der Konfrontation", a:0.10,
+       ziel:"Rationale vermitteln, informierte Entscheidung herbeiführen.",
+       b:["Vorgehen, Belastungsverlauf und Dauer transparent machen","Verfahren auswählen und begründen","Supervision vor Beginn einplanen"],
+       s:"Als PiA ohne abgestimmte Supervision in die Konfrontationsphase gehen."},
+      {t:"Traumakonfrontation", a:0.32,
+       ziel:"Verarbeitung der Traumaerinnerung, Abbau der Vermeidung.",
+       b:["Gewähltes Konfrontationsverfahren konsequent durchführen","Ausreichend lange Sitzungen ansetzen","Verlauf der Belastung dokumentieren","Engmaschige Supervision"],
+       s:"Sitzungen zu kurz ansetzen. Konfrontation braucht Zeit für den Abfall der Belastung."},
+      {t:"Kognitive Bearbeitung von Bedeutungen", a:0.16,
+       ziel:"Schuld, Scham, Vertrauen und Weltsicht bearbeiten.",
+       b:["Verantwortungszuschreibung prüfen","Bedeutung für Selbst- und Weltbild","Umgang mit Ärger"],
+       s:"Schuldgefühle vorschnell wegargumentieren."},
+      {t:"Integration und Alltag", a:0.08,
+       ziel:"Funktionsniveau und Beziehungen wiederherstellen.",
+       b:["Aktivitätsaufbau, soziale Kontakte","Berufliche Perspektive","Umgang mit Jahrestagen und Auslösern"],
+       s:"Den Alltagstransfer der Konfrontationsphase nachordnen statt parallel zu führen."},
+      {t:"Rezidivprophylaxe und Abschluss", a:0.06,
+       ziel:"Ergebnis sichern, Umgang mit Wiederauftreten festhalten.",
+       b:["Abschlussmessung","Plan für erneute Intrusionen","Weiterführende Hilfen benennen"],
+       s:"Abschluss ohne Plan für Jahrestage und absehbare Auslöser."}
+    ]
+  },
+  anpassung: {
+    name:"Anpassungsstörung", gruppe:"Trauma und Belastung", ll:"keine",
+    module:[
+      {t:"Diagnostik und Klärung des Auftrags", a:0.16,
+       ziel:"Belastungsereignis, Reaktion und Zeitkriterium prüfen, Abgrenzung zu Depression und PTBS.",
+       b:["Zeitlicher Zusammenhang zum Ereignis prüfen","Ressourcen und äußere Belastungen erfassen","Eingangsmessung"],
+       s:"Die Diagnose wird häufig als Verlegenheitsdiagnose gestellt. Für den Bericht braucht es eine belastbare Begründung."},
+      {t:"Psychoedukation und Entlastung", a:0.14,
+       ziel:"Reaktion normalisieren ohne zu bagatellisieren.",
+       b:["Einordnung der Reaktion","Umgang mit Schlaf, Anspannung, Grübeln","Realistische Zeitperspektive"],
+       s:"Zu starke Normalisierung nimmt dem Anliegen den Ernst."},
+      {t:"Bearbeitung der Belastungssituation", a:0.26,
+       ziel:"Konkrete Stressoren angehen.",
+       b:["Problemlöseschritte an der auslösenden Situation","Entscheidungen strukturieren","Soziale Unterstützung mobilisieren"],
+       s:"An Bewältigung arbeiten, während der Stressor unverändert weiterläuft."},
+      {t:"Emotionsbezogene Arbeit", a:0.20,
+       ziel:"Trauer, Ärger oder Kränkung bearbeiten.",
+       b:["Bedeutung des Ereignisses klären","Umgang mit Grübeln","Akzeptanz des Nichtveränderbaren"],
+       s:"Emotionsarbeit überspringen, wenn die Praxisebene schneller Erfolge zeigt."},
+      {t:"Aktivierung und Alltagsaufbau", a:0.12,
+       ziel:"Funktionsniveau wiederherstellen.",
+       b:["Tagesstruktur","Wiederaufnahme von Aktivitäten","Berufliche Wiedereingliederung"],
+       s:"Rückkehr in die Arbeit ohne Abstufung planen."},
+      {t:"Abschluss", a:0.12,
+       ziel:"Ergebnis sichern, weitere Belastungen antizipieren.",
+       b:["Abschlussmessung","Plan für absehbare Belastungen","Abschlussgespräch"],
+       s:"Bei fortbestehender Symptomatik die Diagnose nicht zu überprüfen."}
+    ]
+  },
+  trauer: {
+    name:"Anhaltende Trauerstörung", gruppe:"Trauma und Belastung", ll:"keine",
+    module:[
+      {t:"Diagnostik und Beziehungsaufbau", a:0.14,
+       ziel:"Abgrenzung zu normaler Trauer, Depression und PTBS.",
+       b:["Zeitkriterium und Funktionsbeeinträchtigung prüfen","Umstände des Verlusts erfassen","Eingangsmessung"],
+       s:"Trauer pathologisieren. Die Abgrenzung muss im Bericht klar begründet sein."},
+      {t:"Psychoedukation und Modell", a:0.14,
+       ziel:"Vermeidung und Verhaftung als aufrechterhaltende Prozesse verstehen.",
+       b:["Modell aus Vermeidung, Grübeln und Sehnsucht","Individuelle Auslöser sammeln","Zielklärung"],
+       s:"Zielklärung überspringen, weil das Ziel scheinbar auf der Hand liegt."},
+      {t:"Konfrontation mit dem Verlust", a:0.28,
+       ziel:"Vermiedene Erinnerungen und Orte zugänglich machen.",
+       b:["Erzählen der Verlustgeschichte","Aufsuchen vermiedener Orte und Gegenstände","Umgang mit Erinnerungsstücken"],
+       s:"Konfrontation ohne ausreichende Vorbereitung und Nachbesprechung."},
+      {t:"Bearbeitung von Schuld und Bedeutung", a:0.18,
+       ziel:"Selbstvorwürfe und Bedeutungszuschreibungen bearbeiten.",
+       b:["Schuldgefühle prüfen","Bedeutung für das eigene Leben","Umgang mit Ärger auf die verstorbene Person"],
+       s:"Ambivalente Gefühle gegenüber der verstorbenen Person übergehen."},
+      {t:"Neuorientierung", a:0.14,
+       ziel:"Zukunftsperspektive und soziale Wiederanbindung.",
+       b:["Aktivitätsaufbau","Neue Rollen und Beziehungen","Rituale des Erinnerns"],
+       s:"Neuorientierung als Verrat erleben lassen, ohne das anzusprechen."},
+      {t:"Abschluss", a:0.12,
+       ziel:"Ergebnis sichern, Jahrestage vorbereiten.",
+       b:["Abschlussmessung","Plan für Jahrestage und Feiertage","Abschlussgespräch"],
+       s:"Abschluss ohne Vorbereitung auf den ersten Jahrestag."}
+    ]
+  },
+  depression: {
+    name:"Unipolare Depression", gruppe:"Affektive Störungen", ll:"depression",
+    module:[
+      {t:"Diagnostik, Suizidalität, Beziehungsaufbau", a:0.12,
+       ziel:"Schweregrad und Verlaufsform bestimmen, Suizidalität klären, Bündnis herstellen.",
+       b:["Schweregrad, Episodenzahl und Chronifizierung erfassen","Suizidalität explizit und wiederholt ansprechen","Absprachen und Notfallwege festhalten","Eingangsmessung"],
+       s:"Suizidalität einmal zu erfragen und danach als erledigt zu behandeln."},
+      {t:"Psychoedukation und Modell", a:0.10,
+       ziel:"Depressionsspirale und Behandlungsrationale vermitteln.",
+       b:["Zusammenhang von Rückzug, Antriebsminderung und Stimmung erarbeiten","Erwartungen an den Therapieverlauf klären","Angehörige einbeziehen, wo sinnvoll"],
+       s:"Vorschnelles Versprechen rascher Besserung."},
+      {t:"Verhaltensaktivierung", a:0.22,
+       ziel:"Positive Verstärkung wiederherstellen, Antrieb über Handlung aufbauen.",
+       b:["Tagesstruktur und Aktivitätenprotokoll","Aufbau angenehmer und bewältigungsbezogener Aktivitäten","Kopplung von Stimmung und Aktivität sichtbar machen"],
+       s:"Aktivitäten nach Lust planen statt nach Plan handeln."},
+      {t:"Kognitive Umstrukturierung", a:0.22,
+       ziel:"Automatische Gedanken und Bewertungsmuster bearbeiten.",
+       b:["Gedankenprotokolle","Realitätsprüfung und Perspektivwechsel","Umgang mit Grübeln"],
+       s:"Diskussion statt Überprüfung. Verhaltensexperimente wirken stärker als Argumente."},
+      {t:"Kompetenzen, soziale Aktivierung, Problemlösen", a:0.14,
+       ziel:"Belastungen im realen Umfeld reduzieren.",
+       b:["Problemlöseschritte an konkreten Anliegen","Soziale Kontakte und Konfliktklärung","Berufliche Wiedereingliederung planen"],
+       s:"Rückkehr in die Arbeit ohne Abstufung planen."},
+      {t:"Grundannahmen und Selbstwert", a:0.10,
+       ziel:"Überdauernde Muster bearbeiten, insbesondere bei Rezidiven.",
+       b:["Grundannahmen identifizieren und prüfen","Selbstwertaufbau","Biografischer Bezug"],
+       s:"Schemaarbeit beginnen, solange der Antrieb dafür noch nicht reicht."},
+      {t:"Rezidivprophylaxe und Abschluss", a:0.10,
+       ziel:"Rückfallrisiko senken, Frühwarnzeichen und Handlungsplan festhalten.",
+       b:["Frühwarnzeichen und Notfallplan schriftlich","Abschlussmessung","Erhaltungsstrategien, Frequenzreduktion"],
+       s:"Rezidivprophylaxe erst in der letzten Sitzung anzugehen."}
+    ]
+  },
+  chronisch: {
+    name:"Chronische Depression und Dysthymie", gruppe:"Affektive Störungen", ll:"depression",
+    module:[
+      {t:"Diagnostik und Beziehungsaufbau", a:0.14,
+       ziel:"Verlaufsform, Beginn und interpersonelle Muster erfassen.",
+       b:["Frühen Beginn und Dauer dokumentieren","Bisherige Behandlungen und deren Ergebnis","Interpersonelle Muster erfassen","Eingangsmessung"],
+       s:"Die lange Dauer als Therapieresistenz deuten statt als eigene Verlaufsform."},
+      {t:"Psychoedukation und Zielklärung", a:0.12,
+       ziel:"Realistische Erwartungen, Rationale für interpersonelles Vorgehen.",
+       b:["Unterschied zur episodischen Depression erklären","Ziele kleinschrittig und überprüfbar fassen","Rolle der therapeutischen Beziehung transparent machen"],
+       s:"Ziele zu groß fassen. Chronische Verläufe brauchen sichtbare kleine Schritte."},
+      {t:"Situationsanalysen", a:0.26,
+       ziel:"Zusammenhang von eigenem Verhalten und Ergebnis erfahrbar machen.",
+       b:["Konkrete zwischenmenschliche Situationen Schritt für Schritt analysieren","Erwünschtes und tatsächliches Ergebnis gegenüberstellen","Alternative Verhaltensweisen ableiten"],
+       s:"Vorschnell interpretieren statt die Situation konsequent durchzuarbeiten."},
+      {t:"Interpersonelle Arbeit", a:0.20,
+       ziel:"Übertragungserwartungen bearbeiten, Verhalten in Beziehungen verändern.",
+       b:["Prägende Beziehungserfahrungen und daraus abgeleitete Erwartungen","Diskriminationsübungen","Gezielter Einsatz der eigenen Reaktion"],
+       s:"Die eigene Reaktion als Therapeutin ungenutzt lassen."},
+      {t:"Verhaltensaktivierung und Kompetenzen", a:0.14,
+       ziel:"Handlungsspielraum im Alltag erweitern.",
+       b:["Aktivitätsaufbau","Soziale Fertigkeiten","Berufliche Perspektive"],
+       s:"Aktivierung isoliert einsetzen, ohne die interpersonelle Ebene."},
+      {t:"Rezidivprophylaxe und Abschluss", a:0.14,
+       ziel:"Ergebnis sichern, längerfristige Begleitung klären.",
+       b:["Abschlussmessung","Frühwarnzeichen und Notfallplan","Erhaltungstermine und Weiterbehandlung klären"],
+       s:"Abschluss ohne Klärung der Weiterbehandlung bei chronischem Verlauf."}
+    ]
+  },
+  bipolar: {
+    name:"Bipolare Störung, ambulante Begleitbehandlung", gruppe:"Affektive Störungen", ll:"bipolar",
+    module:[
+      {t:"Diagnostik und Behandlungsrahmen", a:0.16,
+       ziel:"Verlauf erfassen, psychiatrische Mitbehandlung sichern.",
+       b:["Episodenanamnese und Verlaufsdokumentation","Medikation und behandelnde Fachärztin klären","Absprachen zur Zusammenarbeit","Eingangsmessung"],
+       s:"Ambulante Psychotherapie ohne gesicherte psychiatrische Mitbehandlung beginnen."},
+      {t:"Psychoedukation", a:0.18,
+       ziel:"Krankheitsverständnis und Behandlungsadhärenz stärken.",
+       b:["Modell der Störung, Rolle der Medikation","Umgang mit Ambivalenz gegenüber der Behandlung","Angehörige einbeziehen"],
+       s:"Ambivalenz gegenüber der Medikation nicht ansprechen."},
+      {t:"Selbstbeobachtung und Frühwarnzeichen", a:0.22,
+       ziel:"Episoden früh erkennen und gegensteuern.",
+       b:["Stimmungstagebuch","Individuelle Frühwarnzeichen für Manie und Depression","Handlungsplan je Frühwarnzeichen"],
+       s:"Frühwarnzeichen allgemein statt individuell formulieren."},
+      {t:"Stabilisierung von Rhythmus und Aktivität", a:0.18,
+       ziel:"Schlaf-Wach-Rhythmus und Belastungssteuerung.",
+       b:["Regelmäßige Tages- und Schlafstruktur","Umgang mit Überstimulation","Aktivitätsdosierung"],
+       s:"Verhaltensaktivierung wie bei unipolarer Depression einsetzen, ohne die Aktivierung zu begrenzen."},
+      {t:"Bearbeitung von Folgen und Selbstbild", a:0.14,
+       ziel:"Umgang mit Krankheitsfolgen, Scham und Selbstbild.",
+       b:["Aufarbeitung von Episodenfolgen","Selbstwert und Identität","Berufliche und soziale Perspektive"],
+       s:"Die biografischen Folgen der Episoden übergehen."},
+      {t:"Rückfallplan und Abschluss", a:0.12,
+       ziel:"Notfallplan mit allen Beteiligten festhalten.",
+       b:["Schriftlicher Krisen- und Notfallplan","Absprachen mit Angehörigen und Psychiatrie","Abschlussmessung"],
+       s:"Notfallplan ohne Einbezug von Angehörigen und behandelnder Psychiaterin."}
+    ]
+  },
+  anorexie: {
+    name:"Anorexia nervosa", gruppe:"Essstörungen", ll:"ess",
+    module:[
+      {t:"Diagnostik, somatische Sicherung, Rahmen", a:0.18,
+       ziel:"Somatisches Risiko klären, Behandlungsrahmen und Grenzen festlegen.",
+       b:["Somatische Mitbehandlung und Laborkontrollen verbindlich vereinbaren","Gewichtsverlauf und Kriterien für stationäre Behandlung festlegen","Motivationslage klären","Eingangsmessung"],
+       s:"Ambulante Behandlung ohne verbindliche somatische Mitbehandlung und ohne definierte Abbruchkriterien."},
+      {t:"Motivation und Therapievertrag", a:0.12,
+       ziel:"Ambivalenz bearbeiten, Rahmen schriftlich fixieren.",
+       b:["Funktionsanalyse der Symptomatik","Vor- und Nachteile der Veränderung","Vereinbarung zu Gewicht, Wiegen und Rahmen"],
+       s:"Ohne schriftliche Vereinbarung zu Gewichtsentwicklung und Grenzen arbeiten."},
+      {t:"Normalisierung des Essverhaltens", a:0.24,
+       ziel:"Regelmäßige Mahlzeiten, Gewichtsentwicklung.",
+       b:["Essprotokoll und Mahlzeitenstruktur","Schrittweise Erweiterung von Menge und Auswahl","Umgang mit vermiedenen Lebensmitteln"],
+       s:"Kognitive Arbeit vorziehen, während das Gewicht weiter sinkt."},
+      {t:"Kognitive Arbeit an Körperbild und Selbstwert", a:0.20,
+       ziel:"Überbewertung von Figur und Gewicht bearbeiten.",
+       b:["Körperbildarbeit","Perfektionismus und Kontrolle","Selbstwertquellen erweitern"],
+       s:"Körperbildarbeit vor ausreichender körperlicher Stabilisierung."},
+      {t:"Familiäres und soziales Umfeld", a:0.12,
+       ziel:"Umfeld einbeziehen, Konflikte um das Essen entlasten.",
+       b:["Angehörigengespräche","Umgang mit Mahlzeiten in der Familie","Soziale Aktivitäten"],
+       s:"Angehörige außen vor lassen, obwohl sie täglich beteiligt sind."},
+      {t:"Rückfallprophylaxe und Abschluss", a:0.14,
+       ziel:"Ergebnis sichern, Gewichtserhalt planen.",
+       b:["Abschlussmessung und Gewichtsverlauf","Frühwarnzeichen und Handlungsplan","Weiterbehandlung und Nachsorge klären"],
+       s:"Abschluss bei noch nicht stabilem Gewicht ohne Anschlussbehandlung."}
+    ]
+  },
+  bulimie: {
+    name:"Bulimia nervosa", gruppe:"Essstörungen", ll:"ess",
+    module:[
+      {t:"Diagnostik und Rahmen", a:0.14,
+       ziel:"Symptomatik, somatische Folgen und Komorbidität erfassen.",
+       b:["Frequenz von Essanfällen und kompensatorischem Verhalten","Somatische Abklärung, insbesondere Elektrolyte","Komorbide Depression und Substanzkonsum","Eingangsmessung"],
+       s:"Erbrechen und Laxanziengebrauch werden untertrieben. Konkret und wiederholt erfragen."},
+      {t:"Psychoedukation und Modell", a:0.14,
+       ziel:"Kreislauf aus Restriktion, Essanfall und Kompensation verstehen.",
+       b:["Individuelles Modell am Essprotokoll","Wirkung von Restriktion auf Essanfälle","Wirkungslosigkeit von Erbrechen zur Gewichtskontrolle"],
+       s:"Den Zusammenhang zwischen Diätverhalten und Essanfällen nicht früh genug herstellen."},
+      {t:"Normalisierung des Essverhaltens", a:0.26,
+       ziel:"Regelmäßige Mahlzeiten, Unterbrechung des Kreislaufs.",
+       b:["Feste Mahlzeitenstruktur","Selbstbeobachtung mit Protokoll","Alternativen zu kompensatorischem Verhalten"],
+       s:"An Auslösern arbeiten, während die Mahlzeitenstruktur noch fehlt."},
+      {t:"Umgang mit Auslösern und Emotionen", a:0.20,
+       ziel:"Emotionsregulation ohne Essanfälle.",
+       b:["Auslöseanalyse","Fertigkeiten zur Spannungsregulation","Umgang mit Rückfällen in der Behandlung"],
+       s:"Rückfälle als Scheitern bewerten statt als Analysematerial nutzen."},
+      {t:"Kognitive Arbeit an Figur und Selbstwert", a:0.14,
+       ziel:"Überbewertung von Figur und Gewicht bearbeiten.",
+       b:["Körperbildarbeit","Kontrollverhalten und Vermeidung","Selbstwertquellen erweitern"],
+       s:"Körperkontrolle und Körpervermeidung übersehen."},
+      {t:"Rückfallprophylaxe und Abschluss", a:0.12,
+       ziel:"Ergebnis sichern, Umgang mit Rückfällen festhalten.",
+       b:["Abschlussmessung","Frühwarnzeichen und Handlungsplan","Abschlussgespräch"],
+       s:"Kein konkreter Plan für den ersten Essanfall nach Therapieende."}
+    ]
+  },
+  bes: {
+    name:"Binge-Eating-Störung", gruppe:"Essstörungen", ll:"ess",
+    module:[
+      {t:"Diagnostik und Rahmen", a:0.14,
+       ziel:"Essanfälle, Gewichtsverlauf und Komorbidität erfassen.",
+       b:["Abgrenzung von Essanfällen und Überessen","Gewichtsverlauf und somatische Folgen","Bisherige Diäterfahrungen","Eingangsmessung"],
+       s:"Gewichtsreduktion zum Therapieziel machen, statt die Essanfälle zu behandeln."},
+      {t:"Psychoedukation und Modell", a:0.14,
+       ziel:"Auslöser und aufrechterhaltende Bedingungen verstehen.",
+       b:["Individuelles Modell am Protokoll","Rolle von Restriktion, Stimmung und Scham","Zielklärung Essanfälle statt Gewicht"],
+       s:"Diätempfehlungen geben, die Essanfälle begünstigen."},
+      {t:"Struktur des Essverhaltens", a:0.24,
+       ziel:"Regelmäßige Mahlzeiten, Unterbrechung der Anfälle.",
+       b:["Mahlzeitenstruktur und Protokoll","Umgang mit Auslösesituationen","Achtsamkeit für Hunger und Sättigung"],
+       s:"Struktur zu starr fassen und damit neue Restriktion erzeugen."},
+      {t:"Emotionsregulation", a:0.22,
+       ziel:"Alternativen zum Essen bei Belastung entwickeln.",
+       b:["Auslöseanalyse für emotionale Auslöser","Fertigkeiten zur Spannungsregulation","Umgang mit Scham"],
+       s:"Fertigkeiten vermitteln, ohne sie in den konkreten Auslösesituationen zu üben."},
+      {t:"Körperbild und Selbstwert", a:0.14,
+       ziel:"Körperbezogene Bewertungen und Vermeidung bearbeiten.",
+       b:["Körperbildarbeit","Umgang mit Stigmatisierung","Selbstwertaufbau"],
+       s:"Gewichtsstigma unbeabsichtigt reproduzieren."},
+      {t:"Rückfallprophylaxe und Abschluss", a:0.12,
+       ziel:"Ergebnis sichern, Umgang mit Rückfällen.",
+       b:["Abschlussmessung","Frühwarnzeichen und Handlungsplan","Abschlussgespräch"],
+       s:"Erfolg allein am Gewicht messen."}
+    ]
+  },
+  alkohol: {
+    name:"Alkoholbezogene Störung", gruppe:"Sucht", ll:"alkohol",
+    module:[
+      {t:"Diagnostik, Entzug, Rahmen", a:0.16,
+       ziel:"Schweregrad und Entzugsrisiko klären, Behandlungsrahmen festlegen.",
+       b:["Konsummuster und Abhängigkeitskriterien erfassen","Entzugsrisiko prüfen und ärztliche Mitbehandlung klären","Zielvereinbarung Abstinenz oder Reduktion","Eingangsmessung"],
+       s:"Ambulanten Entzug ohne ärztliche Abklärung mittragen."},
+      {t:"Motivation und Zielklärung", a:0.16,
+       ziel:"Ambivalenz bearbeiten, tragfähiges Ziel vereinbaren.",
+       b:["Motivierende Gesprächsführung","Vor- und Nachteile des Konsums","Verbindliche Zielvereinbarung"],
+       s:"Abstinenz voraussetzen, bevor sie das Ziel der Person ist."},
+      {t:"Funktionsanalyse und Auslöser", a:0.20,
+       ziel:"Konsumfunktion und Auslösesituationen verstehen.",
+       b:["Konsumprotokoll","Analyse von Auslösern, Erwartungen und Konsequenzen","Craving-Verlauf beobachten"],
+       s:"Die Funktion des Konsums übergehen und nur Kontrolltechniken vermitteln."},
+      {t:"Bewältigungsfertigkeiten", a:0.22,
+       ziel:"Alternativen in Auslösesituationen aufbauen.",
+       b:["Umgang mit Craving","Ablehnungstraining für Trinkangebote","Alternative Aktivitäten und soziale Kontakte"],
+       s:"Fertigkeiten nur besprechen statt in Rollenspielen zu üben."},
+      {t:"Umfeld und Alltag", a:0.12,
+       ziel:"Konsumfördernde Bedingungen im Umfeld verändern.",
+       b:["Angehörigengespräche","Arbeitssituation und Finanzen","Selbsthilfeangebote einbeziehen"],
+       s:"Das konsumfördernde Umfeld unverändert lassen."},
+      {t:"Rückfallprophylaxe und Abschluss", a:0.14,
+       ziel:"Rückfall als Ereignis vorbereiten, nicht als Scheitern.",
+       b:["Frühwarnzeichen und Notfallplan","Vorgehen nach einem Rückfall festlegen","Abschlussmessung, Nachsorge klären"],
+       s:"Rückfälle nicht vorab besprechen. Dann führt der erste Rückfall zum Abbruch."}
+    ]
+  },
+  tabak: {
+    name:"Tabakabhängigkeit", gruppe:"Sucht", ll:"tabak",
+    module:[
+      {t:"Diagnostik und Zielklärung", a:0.18,
+       ziel:"Konsummuster, Abhängigkeitsgrad und Motivation erfassen.",
+       b:["Konsumprotokoll und Abhängigkeitsgrad","Bisherige Aufhörversuche auswerten","Medikamentöse Unterstützung ansprechen","Eingangsmessung"],
+       s:"Frühere Aufhörversuche nicht auswerten und dieselben Fehler wiederholen."},
+      {t:"Motivation und Vorbereitung", a:0.20,
+       ziel:"Entscheidung festigen, Aufhörtag festlegen.",
+       b:["Motivierende Gesprächsführung","Konkreter Aufhörtermin","Umfeld informieren, Rauchutensilien entfernen"],
+       s:"Ohne festen Termin arbeiten. Der Aufhörtag ist der Kern des Vorgehens."},
+      {t:"Aufhörphase und Entzugsbewältigung", a:0.26,
+       ziel:"Die ersten Wochen ohne Konsum bewältigen.",
+       b:["Umgang mit Entzugssymptomen und Craving","Alternative Handlungen in Auslösesituationen","Engmaschige Termine in der Anfangsphase"],
+       s:"Termine in der kritischen Anfangsphase zu weit auseinanderlegen."},
+      {t:"Stabilisierung", a:0.20,
+       ziel:"Abstinenz im Alltag festigen.",
+       b:["Umgang mit sozialen Auslösern","Gewichtszunahme thematisieren","Aufbau alternativer Routinen"],
+       s:"Die Sorge vor Gewichtszunahme nicht ansprechen."},
+      {t:"Rückfallprophylaxe und Abschluss", a:0.16,
+       ziel:"Umgang mit Ausrutschern klären.",
+       b:["Unterschied zwischen Ausrutscher und Rückfall","Notfallplan","Abschlussmessung"],
+       s:"Der erste Zug wird als vollständiger Rückfall gewertet."}
+    ]
+  },
+  koerper: {
+    name:"Funktionelle Körperbeschwerden und somatoforme Störungen", gruppe:"Somatisches und Schlaf", ll:"koerper",
+    module:[
+      {t:"Diagnostik und Beziehungsaufbau", a:0.16,
+       ziel:"Beschwerden ernst nehmen, Doppeldiagnostik vermeiden, Bündnis herstellen.",
+       b:["Beschwerdeprotokoll und Funktionsniveau","Bisherige Diagnostik sichten statt zu wiederholen","Kooperation mit der behandelnden Ärztin klären","Eingangsmessung"],
+       s:"Die Beschwerden implizit als eingebildet behandeln. Das beendet das Bündnis sofort."},
+      {t:"Erklärungsmodell", a:0.18,
+       ziel:"Ein Modell entwickeln, das körperliche Beschwerden nicht wegerklärt.",
+       b:["Aufmerksamkeit, Anspannung und Bewertung als verstärkende Faktoren","Teufelskreismodell am eigenen Beispiel","Schonverhalten und Rückversicherung als Aufrechterhaltung"],
+       s:"Ein psychogenes Modell anbieten, bevor das Bündnis es trägt."},
+      {t:"Abbau von Schonverhalten und Rückversicherung", a:0.22,
+       ziel:"Vermeidung und Kontrollverhalten reduzieren.",
+       b:["Body Checking und Rückversicherung reduzieren","Abbau von Schonhaltung, stufenweise Belastungssteigerung","Umgang mit Arztkontakten"],
+       s:"Weitere Abklärungen mittragen, die das Rückversicherungsverhalten stabilisieren."},
+      {t:"Aktivitätsaufbau und Belastungssteuerung", a:0.20,
+       ziel:"Funktionsniveau erhöhen, unabhängig vom Beschwerdeverlauf.",
+       b:["Zeitkontingentes statt schmerzkontingentes Vorgehen","Aufbau von Aktivität und Arbeitsfähigkeit","Pausen- und Belastungsplanung"],
+       s:"Aktivität am Beschwerdeniveau ausrichten und damit das Schonverhalten verstärken."},
+      {t:"Emotionen, Stress und biografischer Kontext", a:0.12,
+       ziel:"Belastungsfaktoren bearbeiten, soweit tragfähig.",
+       b:["Zusammenhang von Belastung und Beschwerden am Protokoll","Emotionswahrnehmung","Konflikte und Überforderung im Alltag"],
+       s:"Biografische Deutungen anbieten, die als Schuldzuweisung ankommen."},
+      {t:"Rückfallprophylaxe und Abschluss", a:0.12,
+       ziel:"Umgang mit Beschwerdeschüben festhalten.",
+       b:["Abschlussmessung","Plan für Verschlechterungen","Absprache mit der weiterbehandelnden Ärztin"],
+       s:"Beschwerdefreiheit als Erfolgskriterium setzen statt Funktionsfähigkeit."}
+    ]
+  },
+  krankheitsangst: {
+    name:"Krankheitsangst und Hypochondrie", gruppe:"Somatisches und Schlaf", ll:"koerper",
+    module:[
+      {t:"Diagnostik und Beziehungsaufbau", a:0.14,
+       ziel:"Befürchtungen, Kontrollverhalten und bisherige Abklärungen erfassen.",
+       b:["Konkrete Befürchtungen und Auslöser","Rückversicherung, Body Checking, Suchmaschinennutzung","Abgrenzung zu Zwangsstörung und Panikstörung","Eingangsmessung"],
+       s:"Rückversicherung durch die eigene Beruhigung in der Sitzung geben."},
+      {t:"Modell und Psychoedukation", a:0.16,
+       ziel:"Aufmerksamkeits- und Rückversicherungskreislauf verstehen.",
+       b:["Teufelskreis aus Wahrnehmung, Bewertung und Kontrolle","Wirkung von Rückversicherung kurz- und langfristig","Zielklärung"],
+       s:"Über Krankheitswahrscheinlichkeiten diskutieren."},
+      {t:"Abbau von Kontroll- und Rückversicherungsverhalten", a:0.28,
+       ziel:"Das aufrechterhaltende Verhalten streichen.",
+       b:["Reduktion von Body Checking und Recherche","Absprache mit Angehörigen und Hausärztin","Umgang mit Arztkontakten neu regeln"],
+       s:"Die Reduktion vereinbaren, ohne die Hausärztin einzubeziehen."},
+      {t:"Exposition", a:0.20,
+       ziel:"Konfrontation mit Krankheitsreizen und Ungewissheit.",
+       b:["Konfrontation mit Krankheitsinformationen und Symptomen","Verzicht auf Rückversicherung während der Übung","Toleranz gegenüber Ungewissheit"],
+       s:"Exposition ohne konsequentes Weglassen der Rückversicherung."},
+      {t:"Kognitive Arbeit", a:0.12,
+       ziel:"Bewertungen und Kontrollüberzeugungen bearbeiten.",
+       b:["Verhaltensexperimente zu Aufmerksamkeit und Symptomwahrnehmung","Bedeutung von Gesundheit und Kontrolle","Umgang mit Restrisiko"],
+       s:"Beruhigung als kognitive Technik tarnen."},
+      {t:"Rückfallprophylaxe und Abschluss", a:0.10,
+       ziel:"Umgang mit neuen Symptomen festhalten.",
+       b:["Abschlussmessung","Regel für den Umgang mit neuen Beschwerden","Abschlussgespräch"],
+       s:"Kein Vorgehen für die nächste reale körperliche Erkrankung vereinbaren."}
+    ]
+  },
+  insomnie: {
+    name:"Insomnie", gruppe:"Somatisches und Schlaf", ll:"schlaf",
+    module:[
+      {t:"Diagnostik und Schlafprotokoll", a:0.16,
+       ziel:"Schlafmuster erfassen, organische und substanzbedingte Ursachen ausschließen.",
+       b:["Schlaftagebuch über mindestens zwei Wochen","Abklärung von Schlafapnoe und Restless Legs veranlassen","Medikation und Substanzkonsum erfassen","Eingangsmessung"],
+       s:"Ohne zweiwöchiges Schlafprotokoll beginnen. Die Selbstauskunft weicht regelmäßig vom Protokoll ab."},
+      {t:"Psychoedukation und Modell", a:0.14,
+       ziel:"Aufrechterhaltung durch Verhalten und Anspannung verstehen.",
+       b:["Modell aus Anspannung, Bemühen um Schlaf und Kompensation","Schlafregulation erklären","Erwartungen an die Schlafdauer prüfen"],
+       s:"Schlafhygiene als Hauptintervention einsetzen. Sie allein reicht nicht."},
+      {t:"Bettzeitrestriktion und Stimuluskontrolle", a:0.30,
+       ziel:"Schlafeffizienz erhöhen, Bett wieder mit Schlaf verknüpfen.",
+       b:["Bettzeit auf die tatsächliche Schlafzeit begrenzen","Aufstehen bei längerem Wachliegen","Wöchentliche Anpassung anhand des Protokolls"],
+       s:"Die Bettzeitrestriktion zu früh lockern. Die erste Woche ist die anstrengendste."},
+      {t:"Umgang mit Gedanken und Anspannung", a:0.18,
+       ziel:"Grübeln und Anspannung vor dem Einschlafen reduzieren.",
+       b:["Gedankliche Distanzierung, Grübelzeit am Tag","Entspannungsverfahren","Umgang mit Sorgen um die Folgen des Schlafmangels"],
+       s:"Entspannung als Einschlafhilfe einführen und damit neuen Leistungsdruck erzeugen."},
+      {t:"Medikamentenreduktion und Alltag", a:0.10,
+       ziel:"Schlafmittelgebrauch klären, Tagesstruktur stabilisieren.",
+       b:["Reduktionsplan in Abstimmung mit der verordnenden Ärztin","Tagesaktivität und Lichtexposition","Umgang mit Schichtarbeit"],
+       s:"Reduktion ohne ärztliche Abstimmung anstoßen."},
+      {t:"Rückfallprophylaxe und Abschluss", a:0.12,
+       ziel:"Umgang mit schlechten Nächten festhalten.",
+       b:["Abschlussmessung","Regel für den Umgang mit Rückschlägen","Abschlussgespräch"],
+       s:"Einzelne schlechte Nächte als Rückfall bewerten."}
+    ]
+  },
+  borderline: {
+    name:"Borderline-Persönlichkeitsstörung", gruppe:"Persönlichkeit und schwere Erkrankungen", ll:"borderline",
+    module:[
+      {t:"Diagnostik, Rahmen, Absprachen", a:0.16,
+       ziel:"Diagnose transparent stellen, Rahmen und Krisenwege verbindlich klären.",
+       b:["Diagnose offen mitteilen und einordnen","Verhaltensanalyse selbstschädigenden Verhaltens","Verbindliche Absprachen für Krisen und Erreichbarkeit","Eingangsmessung"],
+       s:"Als PiA ohne geklärte Erreichbarkeitsregeln und Krisenwege der Ambulanz beginnen."},
+      {t:"Psychoedukation und Zielhierarchie", a:0.14,
+       ziel:"Behandlungslogik vermitteln, Bearbeitungsreihenfolge festlegen.",
+       b:["Störungsmodell und Behandlungsrationale","Zielhierarchie mit Vorrang lebensbedrohlichen Verhaltens","Umgang mit therapiegefährdendem Verhalten"],
+       s:"Ohne explizite Zielhierarchie arbeiten und sich von jeder Krise steuern lassen."},
+      {t:"Fertigkeiten zur Spannungsregulation", a:0.24,
+       ziel:"Alternativen zu selbstschädigendem Verhalten aufbauen.",
+       b:["Anspannungskurve und Frühwarnzeichen","Fertigkeiten für hohe Anspannung","Notfallkoffer, in der Sitzung erprobt"],
+       s:"Fertigkeiten besprechen, ohne sie unter Anspannung zu üben."},
+      {t:"Verhaltensanalysen kritischer Situationen", a:0.20,
+       ziel:"Auslöser, Muster und Konsequenzen verstehen.",
+       b:["Kettenanalyse nach kritischen Ereignissen","Lösungsanalyse mit alternativen Kettengliedern","Wiederkehrende Muster herausarbeiten"],
+       s:"Kettenanalysen abkürzen, wenn die Sitzung emotional wird."},
+      {t:"Emotionsregulation und Beziehungsgestaltung", a:0.14,
+       ziel:"Emotionswahrnehmung und zwischenmenschliche Fertigkeiten.",
+       b:["Emotionswahrnehmung und -benennung","Umgang mit Scham und Ärger","Zwischenmenschliche Fertigkeiten, Grenzen setzen"],
+       s:"Die Beziehungsgestaltung in der Therapie selbst nicht zum Thema machen."},
+      {t:"Stabilisierung und Abschluss", a:0.12,
+       ziel:"Ergebnis sichern, Weiterbehandlung klären.",
+       b:["Abschlussmessung","Krisenplan schriftlich","Weiterbehandlung und Nachsorge frühzeitig klären"],
+       s:"Das Therapieende zu spät ansprechen. Trennungsthemen brauchen Vorlauf."}
+    ]
+  },
+  psychose: {
+    name:"Schizophrenie und psychotische Störungen, ambulante KVT", gruppe:"Persönlichkeit und schwere Erkrankungen", ll:"schizo",
+    module:[
+      {t:"Diagnostik, Rahmen, Kooperation", a:0.16,
+       ziel:"Behandlungsrahmen klären, psychiatrische Mitbehandlung sichern.",
+       b:["Symptomatik, Verlauf und Medikation erfassen","Kooperation mit Psychiatrie und Sozialpsychiatrie klären","Belastungsgrenzen der Sitzungen beachten","Eingangsmessung"],
+       s:"Ambulante Psychotherapie ohne gesicherte psychiatrische Mitbehandlung beginnen."},
+      {t:"Beziehungsaufbau und Normalisierung", a:0.18,
+       ziel:"Tragfähiges Bündnis, Entstigmatisierung.",
+       b:["Erleben ernst nehmen, ohne Inhalte zu bestätigen oder zu bestreiten","Normalisierung psychotischer Erfahrungen","Individuelle Ziele der Person in den Mittelpunkt"],
+       s:"Über den Wahrheitsgehalt von Inhalten diskutieren."},
+      {t:"Individuelles Modell", a:0.16,
+       ziel:"Verständnis von Auslösern, Stress und Symptomatik.",
+       b:["Vulnerabilitäts-Stress-Modell am eigenen Verlauf","Zusammenhang von Belastung und Symptomen","Bedeutung von Schlaf und Substanzkonsum"],
+       s:"Ein Modell überstülpen, das der eigenen Erklärung der Person widerspricht."},
+      {t:"Arbeit an belastenden Überzeugungen und Stimmen", a:0.24,
+       ziel:"Belastung durch Symptome reduzieren.",
+       b:["Alternative Erklärungen entwickeln, ohne zu konfrontieren","Umgang mit Stimmen, Bewertung der Stimmen","Verhaltensexperimente zu Sicherheitsverhalten"],
+       s:"Zu schnell auf Realitätsprüfung drängen."},
+      {t:"Alltag, Aktivität und soziale Teilhabe", a:0.14,
+       ziel:"Funktionsniveau und Teilhabe verbessern.",
+       b:["Aktivitätsaufbau in kleinen Schritten","Soziale Kontakte und Tagesstruktur","Berufliche oder schulische Perspektive"],
+       s:"Anforderungen zu schnell steigern."},
+      {t:"Frühwarnzeichen und Abschluss", a:0.12,
+       ziel:"Rückfallrisiko senken, Notfallplan festhalten.",
+       b:["Individuelle Frühwarnzeichen","Krisenplan mit Psychiatrie und Angehörigen","Abschlussmessung"],
+       s:"Krisenplan ohne die beteiligten Stellen erstellen."}
+    ]
+  },
+  adhs: {
+    name:"ADHS im Erwachsenenalter", gruppe:"Weitere", ll:"adhs",
+    module:[
+      {t:"Diagnostik und Rahmen", a:0.18,
+       ziel:"Diagnose sichern, Komorbidität klären, medikamentöse Behandlung abstimmen.",
+       b:["Symptomatik seit der Kindheit belegen, Fremdanamnese einbeziehen","Komorbide Depression, Angst und Substanzkonsum erfassen","Medikamentöse Behandlung mit der Fachärztin abstimmen","Eingangsmessung"],
+       s:"Die Diagnose ohne Belege für den Beginn in der Kindheit stellen."},
+      {t:"Psychoedukation", a:0.16,
+       ziel:"Störungsverständnis und Neubewertung der eigenen Geschichte.",
+       b:["Modell der Störung und ihrer Auswirkungen","Neubewertung biografischer Misserfolge","Erwartungen an Medikation und Psychotherapie klären"],
+       s:"Die Kränkungsgeschichte übergehen und direkt zu Techniken springen."},
+      {t:"Struktur und Organisation", a:0.24,
+       ziel:"Alltagsorganisation verbessern.",
+       b:["Ein einziges Kalender- und Aufgabensystem etablieren","Aufgaben zerlegen, Prioritäten setzen","Umgang mit Aufschieben"],
+       s:"Zu viele Systeme parallel einführen. Eines, das benutzt wird, schlägt drei perfekte."},
+      {t:"Aufmerksamkeit und Impulsivität", a:0.18,
+       ziel:"Ablenkbarkeit und impulsives Handeln reduzieren.",
+       b:["Arbeitsumgebung und Ablenkungsmanagement","Arbeiten in kurzen Blöcken","Innehalten vor impulsiven Entscheidungen"],
+       s:"Techniken vermitteln, ohne sie an konkreten Alltagsaufgaben zu erproben."},
+      {t:"Emotionsregulation und Selbstwert", a:0.14,
+       ziel:"Umgang mit Frustration, Ärger und Selbstabwertung.",
+       b:["Emotionswahrnehmung und Frühwarnzeichen","Umgang mit Kritik und Zurückweisung","Selbstwertaufbau auf Basis realistischer Anforderungen"],
+       s:"Selbstwertarbeit ohne Entlastung von überhöhten Anforderungen."},
+      {t:"Transfer und Abschluss", a:0.10,
+       ziel:"Ergebnis sichern, Rückfall in alte Muster vorbereiten.",
+       b:["Abschlussmessung","Plan für Phasen mit hoher Belastung","Abschlussgespräch"],
+       s:"Strategien brechen unter Belastung als Erstes weg. Das gehört in den Plan."}
+    ]
+  }
+};
+
+function el(s){ return document.querySelector(s); }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
+
+var zustand = laden();
+function laden(){
+  try{
+    var roh=window.localStorage.getItem(SCHLUESSEL);
+    var d=roh?JSON.parse(roh):null;
+    if(!d) throw new Error("leer");
+    if(!d.haken) d.haken={};
+    if(!d.notizen) d.notizen={};
+    return d;
+  }catch(e){ return {stoerung:"panik", sitzungen:24, code:"", haken:{}, notizen:{}}; }
+}
+function sichern(){ try{ window.localStorage.setItem(SCHLUESSEL, JSON.stringify(zustand)); }catch(e){} }
+
+function karte(){ return LANDKARTEN[zustand.stoerung] || LANDKARTEN.panik; }
+function leitlinie(){ return LL[karte().ll] || LL.keine; }
+function schluessel(i){ return (zustand.code||"ohne")+"|"+zustand.stoerung+"|"+i; }
+
+/* Grenzen der Module in Sitzungen */
+function grenzen(){
+  var k=karte(), gesamt=zustand.sitzungen, summe=0, roh=[], laufend=0;
+  k.module.forEach(function(m){ summe+=m.a; });
+  k.module.forEach(function(m){
+    var anteil=m.a/summe;
+    laufend+=anteil*gesamt;
+    roh.push({anteil:anteil, ende:Math.round(laufend)});
+  });
+  var start=1, ergebnis=[];
+  roh.forEach(function(r,i){
+    var ende=Math.max(start, r.ende);
+    if(i===roh.length-1) ende=gesamt;
+    ergebnis.push({von:start, bis:ende, anteil:r.anteil});
+    start=ende+1;
+  });
+  return ergebnis;
+}
+
+function zeichneStreifen(){
+  var k=karte(), g=grenzen(), gesamt=zustand.sitzungen;
+  el("#streifen").innerHTML = k.module.map(function(m,i){
+    var breite=(g[i].anteil*100).toFixed(2);
+    return '<div style="width:'+breite+'%;background:'+FARBEN[i%FARBEN.length]+'" title="'+esc(m.t)+'">'
+      + (g[i].anteil>0.09 ? (g[i].von+"–"+g[i].bis) : "") + '</div>';
+  }).join("");
+
+  var marken=[1];
+  for(var s=5;s<gesamt;s+=5) marken.push(s);
+  marken.push(gesamt);
+  if(gesamt>=20 && marken.indexOf(20)<0) marken.push(20);
+  marken.sort(function(a,b){ return a-b; });
+  el("#achse").innerHTML = marken.map(function(s){
+    var pos=((s-0.5)/gesamt)*100;
+    var betont = (s===20 && gesamt>=20);
+    return '<i class="'+(betont?"betont":"")+'" style="left:'+pos.toFixed(2)+'%"></i>'
+      + '<span class="'+(betont?"betont":"")+'" style="left:'+pos.toFixed(2)+'%">'+s+'</span>';
+  }).join("");
+}
+
+function zeichneModule(){
+  var k=karte(), g=grenzen();
+  el("#module").innerHTML = k.module.map(function(m,i){
+    var sl=schluessel(i), erledigt=!!zustand.haken[sl];
+    return '<article class="modul'+(erledigt?" erledigt":"")+'" style="border-left-color:'+FARBEN[i%FARBEN.length]+'">'
+      + '<div class="modul-kopf"><h2>'+esc(m.t)+'</h2>'
+      +   '<span class="spanne">Sitzung '+g[i].von+'–'+g[i].bis+'</span>'
+      +   '<span class="rechts"><label class="haken"><input type="checkbox" data-haken="'+i+'"'+(erledigt?" checked":"")+'> erledigt</label></span>'
+      + '</div>'
+      + '<p class="ziel">'+esc(m.ziel)+'</p>'
+      + '<ul class="bausteine">'+m.b.map(function(x){ return '<li>'+esc(x)+'</li>'; }).join("")+'</ul>'
+      + '<div class="stolper"><b>Stolperstein:</b> '+esc(m.s)+'</div>'
+      + '<textarea class="notiz" data-notiz="'+i+'" placeholder="Notiz zu diesem Fall">'+esc(zustand.notizen[sl]||"")+'</textarea>'
+      + '</article>';
+  }).join("");
+}
+
+function zeichneQuelle(){
+  var k=karte();
+  el("#quelle").innerHTML =
+    '<p>Fachliche Grundlage für Indikation und Verfahrenswahl: '+esc(leitlinie().q)
+    + ' <a href="'+esc(leitlinie().l)+'" target="_blank" rel="noopener">Registereintrag</a></p>'
+    + '<p>Die Aufteilung in Module und Sitzungsspannen stammt aus der verhaltenstherapeutischen Manualliteratur und ist ein Planungsraster. Sie ist kein Bestandteil der Leitlinie und ersetzt weder die individuelle Fallkonzeption noch die Vorgaben des Ausbildungsinstituts.</p>';
+}
+
+function zeichneKopf(){
+  el("#stoerung").innerHTML = GRUPPEN.map(function(g){
+    var eintraege = Object.keys(LANDKARTEN).filter(function(k){ return LANDKARTEN[k].gruppe===g; });
+    if(!eintraege.length) return "";
+    return '<optgroup label="'+esc(g)+'">'
+      + eintraege.map(function(k){
+          return '<option value="'+k+'"'+(k===zustand.stoerung?" selected":"")+'>'+esc(LANDKARTEN[k].name)+'</option>';
+        }).join("")
+      + '</optgroup>';
+  }).join("");
+  el("#sitzungen").value=zustand.sitzungen;
+  el("#code").value=zustand.code||"";
+}
+
+el("#stoerung").addEventListener("change", function(){ zustand.stoerung=this.value; sichern(); alles(); });
+el("#sitzungen").addEventListener("input", function(){
+  var n=parseInt(this.value,10);
+  if(isNaN(n)||n<8) return;
+  zustand.sitzungen=Math.min(120,n); sichern(); zeichneStreifen(); zeichneModule();
+});
+el("#code").addEventListener("input", function(){ zustand.code=this.value.trim(); sichern(); zeichneModule(); });
+el("#btn-zuruecksetzen").addEventListener("click", function(){
+  if(!window.confirm("Alle Haken und Notizen für "+(zustand.code||"ohne Code")+" in dieser Landkarte löschen?")) return;
+  var k=karte();
+  k.module.forEach(function(m,i){ delete zustand.haken[schluessel(i)]; delete zustand.notizen[schluessel(i)]; });
+  sichern(); zeichneModule();
+});
+
+el("#module").addEventListener("change", function(ev){
+  var t=ev.target;
+  if(t.hasAttribute("data-haken")){
+    var i=parseInt(t.getAttribute("data-haken"),10);
+    zustand.haken[schluessel(i)]=t.checked;
+    sichern(); zeichneModule();
+  }
+});
+el("#module").addEventListener("input", function(ev){
+  var t=ev.target;
+  if(t.hasAttribute("data-notiz")){
+    var i=parseInt(t.getAttribute("data-notiz"),10);
+    zustand.notizen[schluessel(i)]=t.value; sichern();
+  }
+});
+
+el("#btn-text").addEventListener("click", function(){
+  var k=karte(), g=grenzen(), z=[];
+  z.push("Modulplan — "+k.name);
+  z.push((zustand.code?"Fall "+zustand.code+" · ":"")+zustand.sitzungen+" geplante Sitzungen");
+  z.push("");
+  k.module.forEach(function(m,i){
+    var sl=schluessel(i);
+    z.push("## "+m.t+" (Sitzung "+g[i].von+"–"+g[i].bis+")"+(zustand.haken[sl]?" [erledigt]":""));
+    z.push("Ziel: "+m.ziel);
+    m.b.forEach(function(x){ z.push("- "+x); });
+    z.push("Stolperstein: "+m.s);
+    if(zustand.notizen[sl]) z.push("Notiz: "+zustand.notizen[sl]);
+    z.push("");
+  });
+  z.push("Grundlage: "+leitlinie().q);
+  z.push("Die Modulaufteilung ist ein Planungsraster aus der Manualliteratur, kein Leitlinienbestandteil.");
+  var blob=new Blob([z.join("\n")],{type:"text/markdown;charset=utf-8"});
+  var a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="modulplan-"+zustand.stoerung+(zustand.code?"-"+zustand.code:"")+".md";
+  a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); },1000);
+});
+
+/* Offlinebetrieb */
+(function(){
+  if(!("serviceWorker" in navigator)) return;
+  if(location.protocol!=="http:" && location.protocol!=="https:") return;
+  window.addEventListener("load", function(){ navigator.serviceWorker.register("sw.js").catch(function(){}); });
+})();
+
+
+/* ---------- Gemeinsames Fallverzeichnis (seitenübergreifend) ---------- */
+var FALLVERZEICHNIS = "pia-faelle-v1";
+function verzeichnisLesen(){
+  try{
+    var r=window.localStorage.getItem(FALLVERZEICHNIS);
+    var d=r?JSON.parse(r):null;
+    return (d && Array.isArray(d.faelle)) ? d.faelle : [];
+  }catch(e){ return []; }
+}
+function verzeichnisFall(code){
+  var l=verzeichnisLesen();
+  for(var i=0;i<l.length;i++){ if(l[i].code===code) return l[i]; }
+  return null;
+}
+function verzeichnisSchreiben(code, zusatz){
+  if(!code) return;
+  try{
+    var liste=verzeichnisLesen(), e=null;
+    for(var i=0;i<liste.length;i++){ if(liste[i].code===code){ e=liste[i]; break; } }
+    if(!e){ e={code:code}; liste.push(e); }
+    if(zusatz) for(var k in zusatz){ if(zusatz[k]!=null && zusatz[k]!=="") e[k]=zusatz[k]; }
+    window.localStorage.setItem(FALLVERZEICHNIS, JSON.stringify({faelle:liste}));
+  }catch(err){}
+}
+function fallDatalist(){
+  var d=document.getElementById("fallcodes");
+  if(!d){ d=document.createElement("datalist"); d.id="fallcodes"; document.body.appendChild(d); }
+  d.innerHTML=verzeichnisLesen().map(function(f){
+    var b=[f.bereich, (f.stand!=null?"Sitzung "+f.stand:null), f.status].filter(Boolean).join(" · ");
+    return '<option value="'+String(f.code).replace(/"/g,"&quot;")+'">'+String(b).replace(/</g,"&lt;")+'</option>';
+  }).join("");
+  var e=document.querySelectorAll("[data-fallcode]");
+  for(var i=0;i<e.length;i++) e[i].setAttribute("list","fallcodes");
+}
+
+function alles(){ zeichneKopf(); zeichneStreifen(); zeichneModule(); zeichneQuelle(); verzeichnisSchreiben(zustand.code,{}); fallDatalist(); }
+alles();
+</script>
+</body>
+</html>
